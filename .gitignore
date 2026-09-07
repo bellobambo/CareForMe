@@ -1,0 +1,15 @@
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Root level ignores
+.env
+node_modules/
+backend/venv/
+backend/__pycache__/
