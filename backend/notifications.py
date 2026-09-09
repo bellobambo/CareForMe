@@ -1,0 +1,94 @@
+import os
+from datetime import datetime, timedelta
+from typing import Any
+from zoneinfo import ZoneInfo
+
+import database
+import messaging
+
+
+def _patient_phone(patient: dict) -> str | None:
+    preference = str(patient.get('preferred_contact_method', 'SMS')).upper()
+    phone = patient.get('phone') or patient.get('contact')
+    if preference not in {'SMS', 'TEXT'} or not phone:
+        return None
+    return phone
+
+
+def send_patient_sms(clinic_id: str, patient_id: str, body: str) -> dict[str, Any]:
+    patient = database.get_patient(clinic_id, patient_id)
+    if not patient:
+        return {'status': 'FAILED', 'reason': 'Patient not found'}
+    phone = _patient_phone(patient)
+    if not phone:
+        return {'status': 'SKIPPED', 'reason': 'Patient has no SMS phone or has opted out'}
+    return messaging.send_sms(phone, body)
+
+
+def send_appointment_notification(clinic_id: str, appointment: dict, kind: str) -> dict[str, Any]:
+    patient_id = appointment['patient_id']
+    patient = database.get_patient(clinic_id, patient_id)
+    if not patient:
+        return {'status': 'FAILED', 'reason': 'Patient not found'}
+    if not _patient_phone(patient):
+        return {'status': 'SKIPPED', 'reason': 'Patient is not configured for SMS'}
+
+    if kind == 'confirmation':
+        claim = 'confirmation'
+        text = f"CareForMe: Your appointment is confirmed for {appointment['date']} at {appointment['time']}. Reply 1 to confirm or 2 to reschedule. Reply STOP to opt out."
+    elif kind == 'reminder_24h':
+        claim = 'reminder_24h'
+        text = f"CareForMe reminder: You have an appointment tomorrow at {appointment['time']} on {appointment['date']}. Reply 1 to confirm or 2 to reschedule."
+    elif kind == 'reminder_2h':
+        claim = 'reminder_2h'
+        text = f"CareForMe reminder: Your appointment is in about 2 hours at {appointment['time']}. Reply 1 to confirm or 2 to reschedule."
+    else:
+        return {'status': 'FAILED', 'reason': f'Unknown notification kind: {kind}'}
+
+    if not database.claim_appointment_notification(clinic_id, appointment['id'], claim):
+        return {'status': 'ALREADY_SENT', 'kind': kind}
+
+    result = messaging.send_sms(_patient_phone(patient), text)
+    database.record_agent_action(
+        clinic_id,
+        appointment['id'],
+        'send_patient_sms',
+        f'{kind} for appointment {appointment["id"]}: {result.get("status")}',
+        'COMPLETED' if result.get('status') in {'SENT', 'DRY_RUN'} else 'FAILED',
+    )
+    return result
+
+
+def send_due_appointment_reminders(clinic_id: str, now: datetime | None = None) -> dict[str, int]:
+    timezone = ZoneInfo(os.getenv('CLINIC_TIMEZONE', 'UTC'))
+    current = now or datetime.now(timezone)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone)
+
+    sent = 0
+    skipped = 0
+    for appointment in database.list_appointments(clinic_id):
+        if appointment.get('status') not in {'SCHEDULED', 'RESCHEDULED'}:
+            continue
+        try:
+            appointment_at = datetime.fromisoformat(
+                f"{appointment['date']}T{appointment['time']}"
+            ).replace(tzinfo=timezone)
+        except (KeyError, TypeError, ValueError):
+            skipped += 1
+            continue
+        if appointment_at <= current:
+            continue
+
+        kind = None
+        if appointment_at - current <= timedelta(hours=2):
+            kind = 'reminder_2h'
+        elif appointment_at - current <= timedelta(hours=24):
+            kind = 'reminder_24h'
+        if kind:
+            result = send_appointment_notification(clinic_id, appointment, kind)
+            if result.get('status') in {'SENT', 'DRY_RUN'}:
+                sent += 1
+            else:
+                skipped += 1
+    return {'sent': sent, 'skipped': skipped}

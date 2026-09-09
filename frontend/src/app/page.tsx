@@ -10,16 +10,17 @@ export default function LandingPage() {
       {/* Navbar */}
       <nav className="flex items-center justify-between p-6 max-w-6xl mx-auto">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white font-bold text-xl">
-            C
+          <div className="logo-cross w-10 h-10 shrink-0" aria-label="CareForMe logo">
+            <span /><span /><span /><span />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-800">CareForMe</h1>
         </div>
         <div className="flex items-center gap-8 text-gray-600 font-bold">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
-          <Link href="/dashboard" className="bg-gray-900 text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition-colors">
-            Clinic Login
+          <Link href="/login" className="hover:text-primary transition-colors">Login</Link>
+          <Link href="/register" className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+            Register Clinic
           </Link>
         </div>
       </nav>
@@ -35,40 +36,40 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 bg-primary-light text-primary px-4 py-2 rounded-full font-bold text-sm mb-8">
             <Bot size={16} /> Powered by Strands Agents & AWS Bedrock
           </div>
-          
+
           <h2 className="text-6xl md:text-7xl font-extrabold text-gray-900 tracking-tight leading-tight mb-8">
             The Autonomous Agent for <br />
             <span className="text-primary">Clinic Operations.</span>
           </h2>
-          
+
           <p className="text-xl text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">
             Stop wasting hours on administrative phone calls. CareForMe silently coordinates follow-ups, reschedules appointments, and flags critical issues—so you can focus on patient care.
           </p>
-          
+
           <div className="flex items-center justify-center gap-4">
-            <Link href="/dashboard">
-              <motion.button 
+            <Link href="/register">
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="bg-primary text-white font-bold text-lg px-8 py-4 rounded-full flex items-center gap-2 shadow-lg shadow-primary/30"
               >
-                Access Dashboard <ArrowRight size={20} />
+                Register your Clinic <ArrowRight size={20} />
               </motion.button>
             </Link>
-            <Link href="/about">
-              <motion.button 
+            <Link href="/login">
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="bg-gray-50 text-gray-800 font-bold text-lg px-8 py-4 rounded-full border border-gray-200 hover:border-gray-300"
               >
-                Learn More
+                Clinic Login
               </motion.button>
             </Link>
           </div>
         </motion.div>
 
         {/* Feature Cards */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}

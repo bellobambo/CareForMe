@@ -5,3 +5,6 @@ boto3
 python-dotenv
 strands-agents
 strands-agents-tools
+python-jose[cryptography]
+passlib[bcrypt]
+twilio

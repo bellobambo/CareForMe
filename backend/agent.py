@@ -1,5 +1,13 @@
+import os
+
+from dotenv import load_dotenv
 from strands import Agent
+
 from tools import ALL_TOOLS
+
+load_dotenv()
+
+BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
 
 # ==========================================
 # SYSTEM PROMPT
@@ -20,11 +28,18 @@ If a patient asks a medical question or reports symptoms (e.g., "I have severe c
 
 Only ask human staff to make decisions that genuinely require human judgment. Handle routine scheduling on your own using the provided tools."""
 
+SYSTEM_PROMPT += """
+
+When staff ask about current clinic records, use the relevant read tool before answering.
+For unattended escalations, use get_pending_escalations and report the exact count and a short summary.
+Do not claim that records are unavailable when a tool can retrieve them. Keep administrative answers concise and readable."""
+
 # ==========================================
 # AGENT INITIALIZATION
 # ==========================================
 
 careforme_agent = Agent(
+    model=BEDROCK_MODEL_ID,
     system_prompt=SYSTEM_PROMPT,
     tools=ALL_TOOLS
 )

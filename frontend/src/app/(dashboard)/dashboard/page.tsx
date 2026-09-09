@@ -14,7 +14,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data } = await axios.get("http://127.0.0.1:8000/api/stats");
+        const token = localStorage.getItem("careforme_token");
+        const { data } = await axios.get("http://127.0.0.1:8000/api/stats", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setStats(data);
       } catch (error) {
         toast.error("Failed to load dashboard data");

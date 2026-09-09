@@ -10,8 +10,8 @@ export default function AboutPage() {
       {/* Navbar */}
       <nav className="flex items-center justify-between p-6 max-w-6xl mx-auto">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white font-bold text-xl">
-            C
+          <div className="logo-cross w-10 h-10" aria-label="CareForMe logo">
+            <span /><span /><span /><span />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-800">CareForMe</h1>
         </div>
@@ -31,7 +31,7 @@ export default function AboutPage() {
           className="text-center mb-20"
         >
           <h2 className="text-5xl font-extrabold text-gray-900 tracking-tight mb-6">
-            Building the Future of <br className="hidden md:block"/> Healthcare Administration
+            Building the Future of <br className="hidden md:block" /> Healthcare Administration
           </h2>
           <p className="text-xl text-gray-500 max-w-2xl mx-auto">
             CareForMe was built for the AWS Hackathon to solve a critical problem in small outpatient clinics: administrative burnout.
@@ -39,7 +39,7 @@ export default function AboutPage() {
         </motion.div>
 
         <div className="space-y-12">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
@@ -56,7 +56,7 @@ export default function AboutPage() {
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
@@ -74,7 +74,7 @@ export default function AboutPage() {
           </motion.div>
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}

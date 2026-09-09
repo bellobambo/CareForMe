@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Autonomous Clinic Operations Agent",
 };
 
+import ConfigureAmplify from "../components/ConfigureAmplify";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,6 +25,7 @@ export default function RootLayout({
       <body
         className={`${nunito.variable} font-sans antialiased bg-background text-foreground`}
       >
+        <ConfigureAmplify />
         {children}
         <Toaster position="top-right" />
       </body>
