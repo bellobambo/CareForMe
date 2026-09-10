@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import os
 import re
+from typing import Optional
 from urllib.parse import parse_qs
 
 from fastapi import FastAPI, BackgroundTasks, Depends, Header, HTTPException, Request, Response
@@ -88,11 +89,14 @@ class AppointmentCreateRequest(BaseModel):
     date: str
     time: str
     duration: int = 30
-    type: str = "routine"
+    type: str = "new visit"
+    reason: Optional[str] = None
+    color: Optional[str] = "#39a9e9"
 
 class AppointmentRescheduleRequest(BaseModel):
     date: str
     time: str
+    color: Optional[str] = None
 
 class ReminderRunRequest(BaseModel):
     clinic_id: str
@@ -171,6 +175,8 @@ def schedule_appointment(
         request.time,
         request.duration,
         request.type,
+        request.reason,
+        request.color,
     )
     background_tasks.add_task(
         notifications.send_appointment_notification, clinic_id, appointment, "confirmation"
@@ -188,7 +194,7 @@ def reschedule_appointment(
         raise HTTPException(status_code=404, detail="Appointment not found")
 
     appointment = database.reschedule_appointment(
-        clinic_id, appointment_id, request.date, request.time
+        clinic_id, appointment_id, request.date, request.time, request.color
     )
     background_tasks.add_task(
         notifications.send_appointment_notification, clinic_id, appointment, "confirmation"

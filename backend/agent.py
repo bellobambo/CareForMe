@@ -44,3 +44,18 @@ careforme_agent = Agent(
     tools=ALL_TOOLS
 )
 
+
+SYSTEM_PROMPT += """
+
+AUTOMATED BACKGROUND WORKFLOWS:
+If you are invoked for routine background maintenance, you must:
+1. Use check_past_appointments to find appointments that have already passed.
+2. For each missed appointment, send a patient message asking if they would like to reschedule or if they attended. 
+3. Then use mark_appointment_status to mark the appointment as NO_SHOW (if they missed) or COMPLETED (if you confirm they attended)."""
+
+# Re-initialize the agent since we appended to SYSTEM_PROMPT
+careforme_agent = Agent(
+    model=BEDROCK_MODEL_ID,
+    system_prompt=SYSTEM_PROMPT,
+    tools=ALL_TOOLS
+)

@@ -210,7 +210,9 @@ def create_appointment(
     date: str,
     time: str,
     duration: int = 30,
-    appointment_type: str = 'routine',
+    appointment_type: str = 'new visit',
+    reason: str = None,
+    color: str = "#39a9e9",
 ):
     table = get_table('Appointments')
     appt_id = str(uuid4())
@@ -223,7 +225,9 @@ def create_appointment(
         'time': time,
         'duration': duration,
         'status': 'SCHEDULED',
-        'type': appointment_type
+        'type': appointment_type,
+        'reason': reason,
+        'color': color
     }
     table.put_item(Item=item)
     return item
@@ -261,13 +265,23 @@ def update_appointment_status(clinic_id: str, appt_id: str, status: str):
         ExpressionAttributeValues={':s': status}
     )
 
-def reschedule_appointment(clinic_id: str, appt_id: str, date: str, time: str):
+def reschedule_appointment(clinic_id: str, appt_id: str, date: str, time: str, color: str = None):
     table = get_table('Appointments')
+    
+    update_expr = "set #d = :d, #t = :t, #s = :s remove confirmation_sent_at, reminder_24h_sent_at, reminder_2h_sent_at"
+    expr_names = {'#d': 'date', '#t': 'time', '#s': 'status'}
+    expr_vals = {':d': date, ':t': time, ':s': 'RESCHEDULED'}
+    
+    if color:
+        update_expr = update_expr.replace("set #d", "set #c = :c, #d")
+        expr_names['#c'] = 'color'
+        expr_vals[':c'] = color
+        
     table.update_item(
         Key=_appointment_key(table, clinic_id, appt_id),
-        UpdateExpression="set #d = :d, #t = :t, #s = :s remove confirmation_sent_at, reminder_24h_sent_at, reminder_2h_sent_at",
-        ExpressionAttributeNames={'#d': 'date', '#t': 'time', '#s': 'status'},
-        ExpressionAttributeValues={':d': date, ':t': time, ':s': 'RESCHEDULED'},
+        UpdateExpression=update_expr,
+        ExpressionAttributeNames=expr_names,
+        ExpressionAttributeValues=expr_vals,
     )
     return get_appointment(clinic_id, appt_id)
 

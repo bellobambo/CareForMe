@@ -54,11 +54,15 @@ export default function PatientsPage() {
         });
     }, []);
 
-    const handleAddPatient = async (values: PatientForm) => {
+    const handleAddPatient = async (values: any) => {
         setSaving(true);
         try {
             const token = localStorage.getItem("careforme_token");
-            await axios.post(`${API_URL}/api/patients`, values, {
+            
+            // Format phone number with country code, stripping any leading zeros from the local number
+            const finalPhone = values.phone ? `${values.country_code}${values.phone.replace(/^0+/, '')}` : undefined;
+            
+            await axios.post(`${API_URL}/api/patients`, { ...values, phone: finalPhone }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             toast.success("Patient added");
@@ -86,6 +90,20 @@ export default function PatientsPage() {
         },
     ];
 
+    const prefixSelector = (
+        <Form.Item name="country_code" noStyle>
+            <Select style={{ width: 120 }} popupMatchSelectWidth={false}>
+                <Select.Option value="+234">+234 (NG)</Select.Option>
+                <Select.Option value="+1">+1 (US)</Select.Option>
+                <Select.Option value="+44">+44 (UK)</Select.Option>
+                <Select.Option value="+91">+91 (IN)</Select.Option>
+                <Select.Option value="+61">+61 (AU)</Select.Option>
+                <Select.Option value="+27">+27 (ZA)</Select.Option>
+                <Select.Option value="+254">+254 (KE)</Select.Option>
+            </Select>
+        </Form.Item>
+    );
+
     return (
         <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -105,15 +123,20 @@ export default function PatientsPage() {
                 </div>
             </motion.div>
 
-            <Modal title="Add patient" open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null} destroyOnHidden>
-                <Form form={form} layout="vertical" onFinish={handleAddPatient} initialValues={{ preferred_contact_method: "EMAIL" }}>
+            <Modal title="Add patient" open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null} destroyOnHidden width={580}>
+                <Form form={form} layout="vertical" onFinish={handleAddPatient} initialValues={{ preferred_contact_method: "WHATSAPP", country_code: "+234" }}>
                     <Form.Item name="name" label="Full name" rules={[{ required: true, message: "Enter the patient's name" }]}><Input placeholder="e.g. Sarah Jenkins" /></Form.Item>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Form.Item name="email" label="Email"><Input type="email" placeholder="patient@example.com" /></Form.Item>
-                        <Form.Item name="phone" label="Phone"><Input placeholder="555-0101" /></Form.Item>
+                        <Form.Item label="Phone" style={{ marginBottom: 0 }}>
+                            <div className="flex items-end gap-3">
+                                {prefixSelector}
+                                <Form.Item name="phone" noStyle><Input className="flex-1" placeholder="706 627 9211" /></Form.Item>
+                            </div>
+                        </Form.Item>
                     </div>
                     <Form.Item name="preferred_contact_method" label="Preferred contact method" rules={[{ required: true }]}>
-                        <Select options={[{ value: "EMAIL", label: "Email" }, { value: "SMS", label: "SMS" }, { value: "PHONE", label: "Phone" }]} />
+                        <Select options={[{ value: "WHATSAPP", label: "WhatsApp" }, { value: "SMS", label: "SMS" }]} />
                     </Form.Item>
                     <div className="flex justify-end gap-3">
                         <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>

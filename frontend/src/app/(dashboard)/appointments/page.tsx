@@ -4,7 +4,7 @@ import { startTransition, useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { Button, Form, Input, InputNumber, Modal, Select, Table, Tag } from "antd";
 import { motion } from "framer-motion";
-import { Calendar, ChevronLeft, ChevronRight, Filter, Plus, RefreshCw, Settings2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Filter, Plus, RefreshCw, Settings2, Tag as TagIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
 type Patient = { id: string; name: string };
@@ -15,7 +15,7 @@ type RescheduleForm = { date: string; time: string };
 const API_URL = "http://127.0.0.1:8000";
 const CALENDAR_START_HOUR = 8;
 const CALENDAR_END_HOUR = 24;
-const HOUR_HEIGHT = 68;
+const HOUR_HEIGHT = 120;
 
 const formatDateKey = (date: Date) => {
     const year = date.getFullYear();
@@ -54,13 +54,18 @@ const statusTone = (status: string) => {
     if (status === "RESCHEDULED") return "amber";
     if (status === "COMPLETED") return "mint";
     if (status === "CANCELLED") return "coral";
+    if (status === "NO_SHOW") return "gray";
     return "sky";
 };
+
+
+
 
 export default function AppointmentsPage() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [rescheduling, setRescheduling] = useState<Appointment | null>(null);
@@ -168,7 +173,9 @@ export default function AppointmentsPage() {
                     <div className="p-5 md:p-6 border-b border-[#f1e9e6] bg-[linear-gradient(110deg,#fff8f6_0%,#fffdfc_58%,#f8fcfb_100%)]">
                         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
                             <div>
-                                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-primary font-extrabold"><span className="w-2 h-2 rounded-full bg-primary" /> Live clinic rhythm</div>
+                                <div className="ekg-container" title="Live clinic rhythm">
+                                    <svg width="60" height="20" viewBox="0 0 60 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="0 10 10 10 15 3 20 17 25 10 60 10" className="ekg-line" /></svg>
+                                </div>
                                 <div className="flex flex-wrap items-end gap-x-4 gap-y-2 mt-2">
                                     <h2 className="text-2xl font-extrabold text-[#282321]">Weekly schedule</h2>
                                     <span className="text-sm text-[#897e7a] pb-0.5">{weekLabel} - {weekEndLabel}</span>
@@ -187,19 +194,23 @@ export default function AppointmentsPage() {
                                     options={[{ value: "ALL", label: "All statuses" }, { value: "SCHEDULED", label: "Scheduled" }, { value: "RESCHEDULED", label: "Rescheduled" }, { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" }]}
                                 />
                                 <Button type="text" icon={<Settings2 size={17} />} aria-label="Calendar settings" />
+                                <Button type="text" icon={isCalendarExpanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />} onClick={() => setIsCalendarExpanded(!isCalendarExpanded)} aria-label="Toggle calendar visibility" />
                             </div>
                         </div>
-                        <div className="flex items-center gap-5 mt-5 text-xs font-bold text-[#897e7a]">
-                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#36a88c]" /> Completed</span>
-                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#39a9e9]" /> Scheduled</span>
-                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#f1a91b]" /> Rescheduled</span>
+                        <div className="flex items-center gap-5 mt-5 text-xs font-bold text-[#897e7a] flex-wrap">
+                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#007AFF]" /> Scheduled</span>
+                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#34C759]" /> Completed</span>
+                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#FF9500]" /> Rescheduled</span>
+                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#8E8E93]" /> No-show</span>
+                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30]" /> Cancelled</span>
                             <span className="ml-auto text-[#514641]"><strong className="text-lg">{weekAppointments.length}</strong> appointments this week</span>
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <div className="min-w-[920px]">
-                            <div className="grid grid-cols-[72px_repeat(7,minmax(120px,1fr))] border-b border-[#f1e9e6] bg-white">
+                    {isCalendarExpanded && (
+                        <div className="overflow-x-auto border-t border-[#f1e9e6]">
+                            <div className="min-w-[920px]">
+                                <div className="grid grid-cols-[72px_repeat(7,minmax(120px,1fr))] border-b border-[#f1e9e6] bg-white">
                                 <div className="p-3 text-[10px] uppercase tracking-wider text-[#b0a29d]" title="Appointment times are shown in GMT+1">GMT +1</div>
                                 {weekDays.map((day) => {
                                     const isToday = formatDateKey(day) === formatDateKey(new Date());
@@ -208,25 +219,39 @@ export default function AppointmentsPage() {
                             </div>
                             <div className="grid grid-cols-[72px_repeat(7,minmax(120px,1fr))]">
                                 <div className="bg-[#fffdfc]">
-                                    {hourSlots.map((hour) => <div key={hour} className="h-[68px] px-3 pt-2 text-[10px] font-bold text-[#aa9d98] border-b border-[#f4eeeb]">{new Date(2000, 0, 1, hour).toLocaleTimeString([], { hour: "numeric", hour12: true })}</div>)}
+                                    {hourSlots.map((hour) => <div key={hour} className="h-[120px] px-3 pt-2 text-[10px] font-bold text-[#aa9d98] border-b border-[#f4eeeb]">{new Date(2000, 0, 1, hour).toLocaleTimeString([], { hour: "numeric", hour12: true })}</div>)}
                                 </div>
                                 {weekDays.map((day) => {
                                     const dayKey = formatDateKey(day);
                                     const dayAppointments = weekAppointments.filter((appointment) => appointment.date === dayKey);
-                                    return <div key={dayKey} className="relative border-l border-[#f1e9e6] bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_67px,#f4eeeb_67px,#f4eeeb_68px)]" style={{ height: hourSlots.length * HOUR_HEIGHT }}>
-                                        {dayAppointments.map((appointment) => {
+                                    return <div key={dayKey} className="relative border-l border-[#f1e9e6] bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_119px,#f4eeeb_119px,#f4eeeb_120px)]" style={{ height: hourSlots.length * HOUR_HEIGHT }}>
+                                        {dayAppointments.filter(appt => timeToMinutes(appt.time) >= CALENDAR_START_HOUR * 60).map((appointment) => {
                                             const startMinutes = timeToMinutes(appointment.time);
                                             const top = Math.max(4, (startMinutes - CALENDAR_START_HOUR * 60) / 60 * HOUR_HEIGHT);
-                                            const height = Math.max(58, ((appointment.duration || 30) / 60) * HOUR_HEIGHT);
+                                            const height = Math.max(75, ((appointment.duration || 30) / 60) * HOUR_HEIGHT);
                                             const tone = statusTone(appointment.status);
-                                            const toneClasses = { mint: "border-[#36a88c] bg-[#effaf6]", sky: "border-[#39a9e9] bg-[#eef8fe]", amber: "border-[#f1a91b] bg-[#fff8e6]", coral: "border-primary bg-[#fff0f1]" };
-                                            return <button key={appointment.id} onClick={() => openReschedule(appointment)} className={`absolute left-2 right-2 overflow-hidden rounded-xl border-l-4 px-2.5 py-2 text-left shadow-[0_4px_12px_rgba(68,45,38,0.05)] transition-transform hover:-translate-y-0.5 ${toneClasses[tone]}`} style={{ top, height }} title="Reschedule appointment"><span className="block text-[10px] font-bold text-[#8f817c]">{formatTime(appointment.time)} - {formatTime(`${String((startMinutes + (appointment.duration || 30)) / 60 | 0).padStart(2, "0")}:${String((startMinutes + (appointment.duration || 30)) % 60).padStart(2, "0")}`)}</span><strong className="block truncate text-xs text-[#302824] mt-1">{patientName(appointment.patient_id)}</strong><span className="block truncate text-[10px] text-[#746864] mt-0.5">{appointment.doctor_id} · {appointment.type || "routine"}</span></button>;
+                                            const toneHex = { mint: "#34C759", sky: "#007AFF", amber: "#FF9500", coral: "#FF3B30", gray: "#8E8E93" } as Record<string, string>;
+                                            const eventColor = toneHex[tone];
+                                            return <button key={appointment.id} onClick={() => openReschedule(appointment)} className="absolute left-2 right-2 overflow-hidden rounded-xl border border-gray-100 bg-white/90 backdrop-blur-sm px-2.5 pt-2 pb-3 text-left shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-0.5 hover:shadow-md group z-10" style={{ top, height }} title="Reschedule appointment">
+                                                <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-[2.5px]" style={{ borderColor: eventColor, backgroundColor: "transparent" }} />{formatTime(appointment.time)} - {formatTime(`${String((startMinutes + (appointment.duration || 30)) / 60 | 0).padStart(2, "0")}:${String((startMinutes + (appointment.duration || 30)) % 60).padStart(2, "0")}`)}</span>
+                                                <strong className="block truncate text-xs text-gray-800 mt-1">{patientName(appointment.patient_id)}</strong>
+                                                <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden">
+                                                    <span className="truncate text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors">
+                                                        {appointment.doctor_id}
+                                                    </span>
+                                                    <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide bg-gray-50 text-gray-800 border border-gray-200 capitalize">
+                                                        <TagIcon size={10} className="text-gray-400" />
+                                                        {appointment.type || "new visit"}
+                                                    </span>
+                                                </div>
+                                            </button>;
                                         })}
                                     </div>;
                                 })}
                             </div>
                         </div>
-                    </div>
+                        </div>
+                    )}
                 </div>
                 <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm overflow-x-auto">
                     <Table dataSource={appointments} columns={columns} rowKey="id" loading={loading} pagination={{ pageSize: 8 }} size="small" scroll={{ x: 900 }} />
@@ -234,17 +259,21 @@ export default function AppointmentsPage() {
             </motion.div>
 
             <Modal title="Schedule appointment" open={isCreateOpen} onCancel={() => setIsCreateOpen(false)} footer={null} destroyOnHidden>
-                <Form form={createForm} layout="vertical" onFinish={handleSchedule} initialValues={{ duration: 30, type: "routine" }}>
+                <Form form={createForm} layout="vertical" onFinish={handleSchedule} initialValues={{ duration: 30, type: "new visit" }}>
                     <Form.Item name="patient_id" label="Patient" rules={[{ required: true, message: "Select a patient" }]}><Select showSearch optionFilterProp="label" options={patients.map((patient) => ({ value: patient.id, label: patient.name }))} placeholder="Select patient" /></Form.Item>
                     <Form.Item name="doctor_id" label="Doctor" rules={[{ required: true, message: "Enter the doctor" }]}><Input placeholder="e.g. Dr. Ade" /></Form.Item>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Form.Item name="date" label="Date" rules={[{ required: true, message: "Enter a date" }]}><Input type="date" /></Form.Item>
-                        <Form.Item name="time" label="Time" rules={[{ required: true, message: "Enter a time" }]}><Input type="time" /></Form.Item>
+                        <Form.Item name="time" label="Time" rules={[{ required: true, message: "Enter a time" }]}><Input type="time" min="08:00" max="23:30" /></Form.Item>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Form.Item name="duration" label="Duration (minutes)" rules={[{ required: true }]}><InputNumber min={1} className="w-full" /></Form.Item>
-                        <Form.Item name="type" label="Appointment type" rules={[{ required: true }]}><Select options={[{ value: "routine", label: "Routine" }, { value: "follow-up", label: "Follow-up" }]} /></Form.Item>
+                        <Form.Item name="duration" label="Duration (minutes)" rules={[{ required: true }]}><InputNumber min={1} style={{ width: '100%' }} /></Form.Item>
+                        <Form.Item name="type" label="Appointment type" rules={[{ required: true }]}><Select options={[{ value: "new visit", label: "New visit" }, { value: "follow-up", label: "Follow-up" }]} /></Form.Item>
                     </div>
+                    <Form.Item name="reason" label="Reason for appointment">
+                        <Input placeholder="e.g. Annual checkup, consultation..." />
+                    </Form.Item>
+
                     <div className="flex justify-end gap-3"><Button onClick={() => setIsCreateOpen(false)}>Cancel</Button><Button type="primary" htmlType="submit" loading={saving}>Schedule</Button></div>
                 </Form>
             </Modal>
@@ -252,7 +281,8 @@ export default function AppointmentsPage() {
             <Modal title="Reschedule appointment" open={Boolean(rescheduling)} onCancel={() => setRescheduling(null)} footer={null} destroyOnHidden>
                 <Form form={rescheduleForm} layout="vertical" onFinish={handleReschedule}>
                     <Form.Item name="date" label="New date" rules={[{ required: true }]}><Input type="date" /></Form.Item>
-                    <Form.Item name="time" label="New time" rules={[{ required: true }]}><Input type="time" /></Form.Item>
+                    <Form.Item name="time" label="New time" rules={[{ required: true }]}><Input type="time" min="08:00" max="23:30" /></Form.Item>
+
                     <div className="flex justify-end gap-3"><Button onClick={() => setRescheduling(null)}>Cancel</Button><Button type="primary" htmlType="submit" loading={saving}>Reschedule</Button></div>
                 </Form>
             </Modal>

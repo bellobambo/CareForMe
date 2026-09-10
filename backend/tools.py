@@ -147,6 +147,43 @@ def escalate_task(clinic_id: str, patient_id: str, reason: str) -> str:
     return f"CLINICAL REVIEW REQUIRED. Case escalated. ID: {escalation['id']}"
 
 
+
+@tool
+def check_past_appointments(clinic_id: str) -> dict:
+    """Find scheduled appointments that have already passed so the agent can follow up on them."""
+    import os
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    
+    timezone = ZoneInfo(os.getenv('CLINIC_TIMEZONE', 'UTC'))
+    current = datetime.now(timezone)
+    
+    missed = []
+    for appt in database.list_appointments(clinic_id):
+        if appt.get("status") not in {"SCHEDULED", "CONFIRMED"}:
+            continue
+        try:
+            appt_time = datetime.fromisoformat(f"{appt['date']}T{appt['time']}").replace(tzinfo=timezone)
+        except Exception:
+            continue
+            
+        if appt_time < current:
+            missed.append({
+                "id": appt.get("id"),
+                "patient_id": appt.get("patient_id"),
+                "date": appt.get("date"),
+                "time": appt.get("time"),
+            })
+            
+    _record(clinic_id, "check_past_appointments", f"Found {len(missed)} unattended past appointments", "COMPLETED")
+    return {"missed_appointments": missed}
+
+@tool
+def mark_appointment_status(clinic_id: str, appointment_id: str, status: str) -> dict:
+    """Update an appointment's status (e.g. COMPLETED, CANCELLED, NO_SHOW)."""
+    database.update_appointment_status(clinic_id, appointment_id, status)
+    _record(clinic_id, "mark_appointment_status", f"Marked {appointment_id} as {status}", "COMPLETED")
+    return {"message": f"Appointment successfully marked as {status}."}
 ALL_TOOLS = [
     get_patient_info,
     get_pending_escalations,
@@ -156,4 +193,6 @@ ALL_TOOLS = [
     send_patient_message,
     create_followup_task,
     escalate_task,
+    check_past_appointments,
+    mark_appointment_status,
 ]

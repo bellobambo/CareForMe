@@ -139,3 +139,214 @@ body,
   .ant-picker-cell-inner {
   background: var(--primary-light);
 }
+
+/* Form UI Overrides for Underline Style */
+.ant-form .ant-input,
+.ant-form .ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.ant-form .ant-picker,
+.ant-form .ant-input-password,
+.ant-form .ant-input-number {
+  border: none !important;
+  border-bottom: 1px solid #888 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.ant-form .ant-input:focus,
+.ant-form .ant-input-focused,
+.ant-form .ant-select-focused .ant-select-selector,
+.ant-form .ant-picker-focused,
+.ant-form .ant-input-number-focused {
+  border-bottom-color: var(--primary) !important;
+}
+
+.ant-form .ant-form-item-label > label {
+  font-weight: 500;
+  color: #555;
+}
+
+.ant-form .ant-form-item-label {
+  padding-bottom: 2px !important;
+}
+
+/* Optional: if they use inline forms, ensure labels and inputs align well */
+.ant-form-inline .ant-form-item {
+  align-items: flex-end;
+}
+
+/* Move forms down */
+.ant-form {
+  margin-top: 24px;
+}
+
+/* Remove default Antd modal header border to look cleaner */
+.ant-modal-header {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+}
+.ant-modal-title {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+}
+
+/* Custom Unique Loading State (Replacing default blue spinner) */
+.ant-spin-dot {
+  display: none !important; /* Hide default 4 dots */
+}
+
+/* Add custom pulsing ring for table loader */
+.ant-spin-spinning::after {
+  content: "";
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--primary-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: custom-spin 1s linear infinite;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -16px;
+  margin-left: -16px;
+}
+
+@keyframes custom-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom button loading state */
+.ant-btn-loading-icon {
+  display: none !important;
+}
+
+.ant-btn.ant-btn-loading {
+  position: relative;
+  opacity: 0.8;
+}
+
+.ant-btn.ant-btn-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: custom-spin 1s linear infinite;
+  z-index: 10;
+}
+
+.ant-btn.ant-btn-loading span {
+  opacity: 0; /* Hide text while loading */
+}
+
+/* Cleaner table styles */
+.ant-table-wrapper .ant-table {
+  background: transparent !important;
+}
+.ant-table-thead > tr > th {
+  background: transparent !important;
+  border-bottom: 2px solid #eaeaea !important;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: #888 !important;
+}
+.ant-table-tbody > tr > td {
+  border-bottom: 1px dashed #eaeaea !important;
+}
+.ant-table-tbody > tr:hover > td {
+  background: var(--primary-light) !important;
+}
+
+/* Move required asterisk to the end (right side) of the label */
+.ant-form-item-required::before {
+  display: none !important;
+}
+.ant-form-item-required::after {
+  content: "*" !important;
+  display: inline-block !important;
+  color: #ff4d4f !important;
+  font-size: 14px !important;
+  margin-left: 4px !important;
+  font-family: var(--font-nunito), sans-serif !important;
+  line-height: 1 !important;
+  visibility: visible !important;
+}
+
+/* Custom Empty State Icon (Replacing default Antd graphic) */
+.ant-empty-image svg {
+  display: none !important;
+}
+.ant-empty-image {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23e4e4e7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 48px;
+  height: 60px !important;
+  margin-bottom: 12px !important;
+}
+.ant-empty-description {
+  color: #a1a1aa !important;
+  font-weight: 500;
+}
+
+/* Heartbeat EKG Animation */
+.ekg-container {
+  display: flex;
+  align-items: center;
+  color: var(--primary);
+}
+
+.ekg-line {
+  stroke-dasharray: 40 100;
+  stroke-dashoffset: 0;
+  animation: ekg-draw 1.5s linear infinite;
+}
+
+@keyframes ekg-draw {
+  0% {
+    stroke-dashoffset: 140;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+
+/* Force ALL form inputs, selects, and numbers to be strictly bottom-bordered only */
+.ant-modal-content .ant-form .ant-input,
+.ant-modal-content .ant-form .ant-select .ant-select-selector,
+.ant-modal-content .ant-form .ant-input-number,
+.ant-modal-content .ant-form .ant-picker {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #888 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  outline: none !important;
+}
+
+.ant-modal-content .ant-form .ant-input:focus,
+.ant-modal-content .ant-form .ant-select-focused .ant-select-selector,
+.ant-modal-content .ant-form .ant-input-number-focused,
+.ant-modal-content .ant-form .ant-picker-focused {
+  border-bottom-color: var(--primary) !important;
+}
+
+/* Hide the up/down arrows on number inputs */
+.ant-modal-content .ant-form .ant-input-number-handler-wrap {
+  display: none !important;
+}

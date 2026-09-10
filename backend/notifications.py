@@ -10,7 +10,7 @@ import messaging
 def _patient_phone(patient: dict) -> str | None:
     preference = str(patient.get('preferred_contact_method', 'SMS')).upper()
     phone = patient.get('phone') or patient.get('contact')
-    if preference not in {'SMS', 'TEXT'} or not phone:
+    if preference not in {'SMS', 'TEXT', 'WHATSAPP'} or not phone:
         return None
     return phone
 
@@ -33,15 +33,26 @@ def send_appointment_notification(clinic_id: str, appointment: dict, kind: str) 
     if not _patient_phone(patient):
         return {'status': 'SKIPPED', 'reason': 'Patient is not configured for SMS'}
 
+    try:
+        dt = datetime.strptime(f"{appointment['date']} {appointment['time']}", "%Y-%m-%d %H:%M")
+        fmt_date = dt.strftime("%b %d %Y").replace("Sep", "Sept")
+        fmt_time = dt.strftime("%I:%M %p")
+    except (ValueError, KeyError):
+        fmt_date = appointment.get('date', '')
+        fmt_time = appointment.get('time', '')
+
     if kind == 'confirmation':
         claim = 'confirmation'
-        text = f"CareForMe: Your appointment is confirmed for {appointment['date']} at {appointment['time']}. Reply 1 to confirm or 2 to reschedule. Reply STOP to opt out."
+        text = f"CareForMe: Your appointment is confirmed for {fmt_date} at {fmt_time}. Reply 1 to confirm or 2 to reschedule. Reply STOP to opt out."
     elif kind == 'reminder_24h':
         claim = 'reminder_24h'
-        text = f"CareForMe reminder: You have an appointment tomorrow at {appointment['time']} on {appointment['date']}. Reply 1 to confirm or 2 to reschedule."
+        text = f"CareForMe reminder: You have an appointment tomorrow at {fmt_time} on {fmt_date}. Reply 1 to confirm or 2 to reschedule."
     elif kind == 'reminder_2h':
         claim = 'reminder_2h'
-        text = f"CareForMe reminder: Your appointment is in about 2 hours at {appointment['time']}. Reply 1 to confirm or 2 to reschedule."
+        text = f"CareForMe reminder: Your appointment is in about 2 hours at {fmt_time}. Reply 1 to confirm or 2 to reschedule."
+    elif kind == 'reminder_10m':
+        claim = 'reminder_10m'
+        text = f"CareForMe reminder: Your appointment is starting in 10 minutes at {fmt_time}! See you soon."
     else:
         return {'status': 'FAILED', 'reason': f'Unknown notification kind: {kind}'}
 
@@ -81,7 +92,9 @@ def send_due_appointment_reminders(clinic_id: str, now: datetime | None = None) 
             continue
 
         kind = None
-        if appointment_at - current <= timedelta(hours=2):
+        if appointment_at - current <= timedelta(minutes=10):
+            kind = 'reminder_10m'
+        elif appointment_at - current <= timedelta(hours=2):
             kind = 'reminder_2h'
         elif appointment_at - current <= timedelta(hours=24):
             kind = 'reminder_24h'

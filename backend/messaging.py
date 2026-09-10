@@ -31,5 +31,9 @@ def send_sms(to: str, body: str) -> dict[str, Any]:
     if client is None:
         raise RuntimeError("TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are required")
 
+    # If using Twilio WhatsApp sandbox, ensure the 'to' number has the whatsapp: prefix
+    if from_number.startswith("whatsapp:") and not to.startswith("whatsapp:"):
+        to = f"whatsapp:{to}"
+
     message = client.messages.create(body=body, from_=from_number, to=to)
     return {"status": "SENT", "sid": message.sid, "to": to}
