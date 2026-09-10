@@ -6,6 +6,8 @@ CareForMe handles the administrative work that keeps small clinics running: appo
 
 **Track:** Professional Agents
 
+**AWS Builder ID:** bellooluwabambo6@gmail.com
+
 ## The problem
 
 Small clinics and independent practitioners lose substantial time to operational work: confirming appointments, chasing no-shows, handling reschedule requests, and monitoring follow-up queues. These tasks are repetitive, time-sensitive, and easy to miss when staff are focused on patient care.
@@ -197,3 +199,17 @@ cd backend
 source venv/bin/activate
 python3 run_agent_cron.py
 ```
+
+## Planned EventBridge architecture
+
+CareForMe currently uses `run_agent_cron.py` to scan each clinic for reminders and appointments that need follow-up. The planned next step is to add **Amazon EventBridge Scheduler** so each appointment can trigger work at its exact due time rather than waiting for the next batch run.
+
+The implementation plan is:
+
+1. When an appointment is created or rescheduled, the API will create or update one-time EventBridge schedules for its 24-hour, 2-hour, and 10-minute reminders, as well as a post-appointment follow-up check.
+2. At each scheduled time, EventBridge will deliver an event containing the clinic ID, patient ID, appointment ID, and event type to the CareForMe event endpoint.
+3. The API will validate the event and run the appropriate workflow: send a reminder, check an unattended appointment, or wake the Strands agent for administrative follow-up.
+4. DynamoDB's existing notification claims will continue to make delivery idempotent, preventing duplicate messages if an event is retried.
+5. If an appointment is rescheduled or cancelled, the API will replace or remove its corresponding EventBridge schedules.
+
+The existing batch worker will remain as a recovery sweep for work missed during an outage. Amazon EventBridge Scheduler is a planned enhancement; it is not yet part of the deployed implementation.
