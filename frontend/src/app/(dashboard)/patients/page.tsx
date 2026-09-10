@@ -124,7 +124,7 @@ export default function PatientsPage() {
             </motion.div>
 
             <Modal title="Add patient" open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null} destroyOnHidden width={580}>
-                <Form form={form} layout="vertical" onFinish={handleAddPatient} initialValues={{ preferred_contact_method: "WHATSAPP", country_code: "+234" }}>
+                <Form form={form} layout="vertical" onFinish={handleAddPatient} initialValues={{ preferred_contact_method: "SMS", country_code: "+234" }}>
                     <Form.Item name="name" label="Full name" rules={[{ required: true, message: "Enter the patient's name" }]}><Input placeholder="e.g. Sarah Jenkins" /></Form.Item>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Form.Item name="email" label="Email"><Input type="email" placeholder="patient@example.com" /></Form.Item>
@@ -136,7 +136,7 @@ export default function PatientsPage() {
                         </Form.Item>
                     </div>
                     <Form.Item name="preferred_contact_method" label="Preferred contact method" rules={[{ required: true }]}>
-                        <Select options={[{ value: "WHATSAPP", label: "WhatsApp" }, { value: "SMS", label: "SMS" }]} />
+                        <Select options={[{ value: "SMS", label: "SMS" }, { value: "WHATSAPP", label: "WhatsApp" }]} />
                     </Form.Item>
                     <div className="flex justify-end gap-3">
                         <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>

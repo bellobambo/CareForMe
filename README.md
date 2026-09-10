@@ -160,8 +160,13 @@ REMINDER_RUN_TOKEN=replace-with-a-long-random-secret
 TWILIO_ENABLED=false
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
-TWILIO_FROM_NUMBER=
+# An SMS-capable Twilio number. Used when a patient selects SMS.
+TWILIO_SMS_FROM_NUMBER=
+# A Twilio WhatsApp sender, for example whatsapp:+14155238886. Used when a patient selects WhatsApp.
+TWILIO_WHATSAPP_FROM_NUMBER=
 ```
+
+Patients choose **SMS** or **WhatsApp** when they are added. CareForMe uses that saved preference for confirmations, reminders, agent messages, and follow-ups. Configure both sender numbers to support both delivery options.
 
 The API creates its DynamoDB tables at startup. Start it with:
 

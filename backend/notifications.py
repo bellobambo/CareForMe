@@ -8,11 +8,20 @@ import messaging
 
 
 def _patient_phone(patient: dict) -> str | None:
-    preference = str(patient.get('preferred_contact_method', 'SMS')).upper()
+    preference = _patient_delivery_channel(patient)
     phone = patient.get('phone') or patient.get('contact')
-    if preference not in {'SMS', 'TEXT', 'WHATSAPP'} or not phone:
+    if preference is None or not phone:
         return None
     return phone
+
+
+def _patient_delivery_channel(patient: dict) -> str | None:
+    preference = str(patient.get('preferred_contact_method', 'SMS')).upper()
+    if preference in {'SMS', 'TEXT'}:
+        return 'SMS'
+    if preference == 'WHATSAPP':
+        return 'WHATSAPP'
+    return None
 
 
 def send_patient_sms(clinic_id: str, patient_id: str, body: str) -> dict[str, Any]:
@@ -20,9 +29,10 @@ def send_patient_sms(clinic_id: str, patient_id: str, body: str) -> dict[str, An
     if not patient:
         return {'status': 'FAILED', 'reason': 'Patient not found'}
     phone = _patient_phone(patient)
-    if not phone:
-        return {'status': 'SKIPPED', 'reason': 'Patient has no SMS phone or has opted out'}
-    return messaging.send_sms(phone, body)
+    channel = _patient_delivery_channel(patient)
+    if not phone or not channel:
+        return {'status': 'SKIPPED', 'reason': 'Patient has no supported phone contact method or has opted out'}
+    return messaging.send_patient_message(phone, body, channel)
 
 
 def send_appointment_notification(clinic_id: str, appointment: dict, kind: str) -> dict[str, Any]:
@@ -30,8 +40,10 @@ def send_appointment_notification(clinic_id: str, appointment: dict, kind: str) 
     patient = database.get_patient(clinic_id, patient_id)
     if not patient:
         return {'status': 'FAILED', 'reason': 'Patient not found'}
-    if not _patient_phone(patient):
-        return {'status': 'SKIPPED', 'reason': 'Patient is not configured for SMS'}
+    phone = _patient_phone(patient)
+    channel = _patient_delivery_channel(patient)
+    if not phone or not channel:
+        return {'status': 'SKIPPED', 'reason': 'Patient has no supported phone contact method or has opted out'}
 
     try:
         dt = datetime.strptime(f"{appointment['date']} {appointment['time']}", "%Y-%m-%d %H:%M")
@@ -59,12 +71,12 @@ def send_appointment_notification(clinic_id: str, appointment: dict, kind: str) 
     if not database.claim_appointment_notification(clinic_id, appointment['id'], claim):
         return {'status': 'ALREADY_SENT', 'kind': kind}
 
-    result = messaging.send_sms(_patient_phone(patient), text)
+    result = messaging.send_patient_message(phone, text, channel)
     database.record_agent_action(
         clinic_id,
         appointment['id'],
-        'send_patient_sms',
-        f'{kind} for appointment {appointment["id"]}: {result.get("status")}',
+        'send_patient_message',
+        f'{kind} via {channel} for appointment {appointment["id"]}: {result.get("status")}',
         'COMPLETED' if result.get('status') in {'SENT', 'DRY_RUN'} else 'FAILED',
     )
     return result
