@@ -1,92 +1,239 @@
-# CareForMe 🩺
+# CareForMe
 
-**CareForMe** is an autonomous clinic operations agent built for the *Agents for Humans Hackathon*. It acts as a tireless background worker that quietly handles the chaotic, repetitive tasks of clinic management—like scheduling, following up with no-shows, and sending appointment reminders—so doctors and medical staff can focus entirely on patient care.
+> An autonomous, safety-bounded clinic operations agent built with the [Strands Agents SDK](https://strandsagents.com/) and Amazon Bedrock for the **Agents for Humans Hackathon**.
 
-## 🎯 The Pitch
-**The Problem:** Small clinics and independent medical professionals spend hours every day managing scheduling changes, hunting down patients who missed their appointments, and sending manual reminders. This administrative burden leads to burnout and reduced patient care time. 
+CareForMe handles the administrative work that keeps small clinics running: appointment coordination, patient reminders, no-show follow-up, and escalation of exceptions to human staff. It is designed to work in the background, take real actions through tools, and leave an auditable record of what it did.
 
-**Who it's for:** Independent doctors, small medical clinics, and professional healthcare teams (perfect for the *Professional Agents* track).
+**Track:** Professional Agents
 
-**Why it matters:** CareForMe takes the mental load off the clinic staff. Instead of giving them another dashboard they have to babysit, CareForMe's agent works autonomously in the background. It watches the calendar, texts patients before their appointments, detects when a patient hasn't shown up, and instantly sends them a compassionate rescheduling text via Twilio WhatsApp/SMS—all without human intervention.
+## The problem
 
-## 🏗️ Architecture
+Small clinics and independent practitioners lose substantial time to operational work: confirming appointments, chasing no-shows, handling reschedule requests, and monitoring follow-up queues. These tasks are repetitive, time-sensitive, and easy to miss when staff are focused on patient care.
+
+Most scheduling products provide another dashboard for staff to monitor. CareForMe is different: it is an agent that can inspect the clinic schedule, identify routine work, contact opted-in patients, update operational records, and surface only the cases that require human judgment.
+
+## Who it is for
+
+- Independent doctors and small clinics
+- Front-desk and clinic operations teams
+- Healthcare teams that need administrative automation without delegating clinical decisions to AI
+
+## Why it matters
+
+Every missed confirmation, forgotten reminder, or unattended no-show increases staff workload and can delay care. CareForMe reduces that operational burden while retaining a firm human-in-the-loop boundary for medical, safety, and exceptional cases.
+
+## What CareForMe does
+
+- Creates and reschedules appointments
+- Sends appointment confirmations and timed SMS/WhatsApp reminders
+- Receives patient replies: confirm, request rescheduling, or opt out
+- Detects appointments that have passed and initiates no-show follow-up
+- Finds available appointment slots and books routine visits through agent tools
+- Creates follow-up tasks for clinic staff
+- Escalates medical or safety-related questions to human staff instead of providing clinical advice
+- Records each agent tool action in an audit log visible in the dashboard
+
+## Safety boundary
+
+CareForMe is an **administrative operations agent**, not a clinician. Its system instructions prohibit it from:
+
+- diagnosing patients;
+- recommending or changing medication;
+- interpreting medical results; or
+- providing medical advice.
+
+When a patient reports symptoms or asks for medical guidance, the agent creates a `REQUIRES_HUMAN_REVIEW` escalation for clinic staff. Routine scheduling and messaging remain automated; clinical judgment remains with people.
+
+## How it works
 
 ```mermaid
-flowchart TD
-    subgraph Frontend
-        UI[CareForMe Dashboard]
-    end
+flowchart LR
+    Staff[Clinic staff] --> Web[Next.js dashboard]
+    Web -->|Cognito ID token| API[FastAPI API]
+    API --> Auth[Amazon Cognito JWT verification]
+    API <--> DB[(Amazon DynamoDB)]
 
-    subgraph Backend
-        API[FastAPI Server]
-        Agent[Strands Agent SDK]
-        Cron[Hourly Background Cron Job]
-    end
-    
-    subgraph Services
-        DB[(AWS DynamoDB)]
-        Twilio[Twilio SMS and WhatsApp]
-    end
+    Staff -->|Operational request| Agent[Strands Agent\nAmazon Bedrock / Nova Lite]
+    Cron[Scheduled worker] -->|Reminder run| API
+    Cron -->|Maintenance run| Agent
+    Event[Event webhook] --> API
+    API --> Agent
 
-    UI <-->|REST API| API
-    Cron -->|Triggers hourly| Agent
-    API <--> DB
-    Agent <--> DB
-    Agent -->|Automated Messaging| Twilio
-    API -->|Immediate Confirmations| Twilio
+    Agent -->|Typed administrative tools| DB
+    Agent -->|Patient messages| Twilio[Twilio SMS / WhatsApp]
+    API -->|Confirmations and reminders| Twilio
+    Patient[Patient] -->|SMS reply webhook| API
 ```
 
-### 🔮 Future Architecture (Event-Driven Agents)
-Currently, CareForMe uses a robust **Batch-Processing** approach (an hourly cron job) to wake the Strands Agent. This ensures extreme resilience—if the server crashes and restarts, the Agent simply sweeps the database on its next run and catches up on any missed appointments.
+### End-to-end workflow
 
-However, our next architectural evolution is to integrate **Amazon EventBridge** to transition the Agent into a fully **Event-Driven** model. Instead of waking up hourly, the API will dynamically schedule an EventBridge trigger the moment an appointment is booked. EventBridge will then wake the Strands Agent at the exact minute an appointment concludes, allowing for real-time, minute-accurate patient follow-ups and eliminating all unnecessary polling compute.
+1. A clinic administrator registers and signs in with Amazon Cognito.
+2. Staff create patient records, doctors, and appointments in the CareForMe dashboard.
+3. The backend stores clinic-scoped records in DynamoDB and sends an appointment confirmation to opted-in patients through Twilio.
+4. A patient can reply `1` to confirm, `2` to request rescheduling, or `STOP` to opt out. The inbound webhook updates the appointment or creates an operational task.
+5. A scheduled worker runs reminder delivery and wakes the Strands agent for background maintenance.
+6. The agent checks past appointments, sends a compassionate follow-up where appropriate, and updates the appointment status. It can also find slots, book appointments, create follow-ups, or escalate cases through its tools.
+7. Every tool call is persisted as an agent action so staff can review what happened.
 
-## ⚙️ Tech Stack
-* **Frontend:** Next.js (App Router), React, Tailwind CSS, Ant Design
-* **Backend:** Python, FastAPI, Uvicorn
-* **AI & Agents:** Strands Agent SDK (Amazon Nova Lite v1)
-* **Database:** AWS DynamoDB
-* **Notifications:** Twilio (SMS & WhatsApp Sandbox)
+## Agent implementation
 
-## 🚀 Getting Started
+The agent is built with the Strands Agents SDK and an Amazon Bedrock model (Amazon Nova Lite by default). It does not merely generate responses: it has tools that read and modify real application state.
+
+| Tool capability | Outcome |
+| --- | --- |
+| Retrieve patient information | Reads a clinic-scoped administrative record |
+| Check pending escalations | Shows cases awaiting human review |
+| Find available slots | Computes unbooked schedule slots |
+| Book or reschedule an appointment | Persists scheduling changes and sends confirmation |
+| Send a patient message | Uses Twilio when the patient has opted in |
+| Create a follow-up task | Adds a task and contacts the patient |
+| Escalate to staff | Creates a human-review task for clinical/safety cases |
+| Check past appointments | Finds unattended appointments for follow-up |
+| Mark appointment status | Updates operational status such as `NO_SHOW` |
+
+The agent is reachable in two ways:
+
+- **Staff-directed:** authenticated staff can ask it to complete administrative work in the dashboard chat.
+- **Autonomous:** `run_agent_cron.py` wakes it for each clinic to perform scheduled maintenance without a staff prompt.
+
+## Technology
+
+| Layer | Technology |
+| --- | --- |
+| Web application | Next.js, React, TypeScript, Tailwind CSS, Ant Design |
+| API | Python, FastAPI, Uvicorn |
+| Agent | Strands Agents SDK, Amazon Bedrock, Amazon Nova Lite |
+| Identity | Amazon Cognito |
+| Operational data | Amazon DynamoDB |
+| Messaging | Twilio SMS / WhatsApp |
+| Scheduling | External cron scheduler running `run_agent_cron.py` |
+
+## Repository structure
+
+```text
+careforme/
+├── backend/
+│   ├── agent.py              # Strands agent and safety/system instructions
+│   ├── tools.py              # Agent tools and audit logging
+│   ├── main.py               # FastAPI routes and webhooks
+│   ├── database.py           # DynamoDB data access
+│   ├── notifications.py      # Reminder and appointment messaging flows
+│   ├── messaging.py          # Twilio delivery or local dry run
+│   └── run_agent_cron.py     # Scheduled autonomous maintenance worker
+├── frontend/
+│   └── src/app/              # Next.js landing page, dashboard, and workflows
+└── README.md
+```
+
+## Run locally
 
 ### Prerequisites
-* Node.js (v18+)
-* Python (3.10+)
-* AWS Account (DynamoDB access)
-* Twilio Account (for SMS/WhatsApp)
-* Strands Agent SDK configured
 
-### 1. Backend Setup
+- Python 3.10 or newer
+- Node.js 18 or newer
+- An AWS account with Bedrock model access and DynamoDB permissions
+- A Cognito User Pool and app client
+- A Twilio account for live SMS/WhatsApp delivery (optional for local dry-run mode)
+
+### 1. Configure the backend
+
 ```bash
 cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
-Create a `.env` file in the `backend/` directory with your AWS, Twilio, and Strands credentials.
-Start the backend server:
+
+Create `backend/.env` with values appropriate for your AWS and Twilio environment:
+
+```dotenv
+AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=amazon.nova-lite-v1:0
+COGNITO_USER_POOL_ID=us-east-1_example
+COGNITO_APP_CLIENT_ID=exampleclientid
+CLINIC_TIMEZONE=Africa/Lagos
+REMINDER_RUN_TOKEN=replace-with-a-long-random-secret
+
+# Keep false to print messages locally instead of delivering them.
+TWILIO_ENABLED=false
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM_NUMBER=
+```
+
+The API creates its DynamoDB tables at startup. Start it with:
+
 ```bash
 uvicorn main:app --reload --port 8000
 ```
 
-### 2. Frontend Setup
+### 2. Configure and start the frontend
+
+Create `frontend/.env.local`:
+
+```dotenv
+NEXT_PUBLIC_USER_POOL_ID=us-east-1_example
+NEXT_PUBLIC_USER_POOL_CLIENT_ID=exampleclientid
+```
+
+Then run:
+
 ```bash
 cd frontend
 npm install
-```
-Start the frontend development server:
-```bash
 npm run dev
 ```
-Navigate to `http://localhost:3000` to view the dashboard!
 
-### 3. Background Agent Automation
-CareForMe relies on an autonomous background worker to handle missed appointments and reminders. To run the background cron job manually (or via your deployment server's cron scheduler):
+Open `http://localhost:3000`.
+
+> The deployed frontend currently targets the Render API URL used by the project. For a fully local browser workflow, update the frontend API base URL to your local API endpoint or deploy the backend and frontend with matching configuration.
+
+### 3. Run autonomous maintenance
+
+With the backend running, use a server scheduler or run this manually:
+
 ```bash
 cd backend
+source venv/bin/activate
 python3 run_agent_cron.py
 ```
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+For a production-like demo, schedule this worker at a cadence appropriate to the reminder windows you enable.
+
+## Demo script
+
+This is the recommended end-to-end demonstration for a judge or video:
+
+1. Register a clinic and sign in.
+2. Add a patient who has opted in to SMS or WhatsApp.
+3. Add a doctor and create an appointment. Show the confirmation message in Twilio or local dry-run output.
+4. Reply `1` through the Twilio webhook to show appointment confirmation, or reply `2` to create a rescheduling task.
+5. Create an appointment in the past and run `python3 run_agent_cron.py`.
+6. Show the agent finding the appointment, sending follow-up, and recording the action in the Agent Activity panel.
+7. Ask the agent to find availability or book a routine appointment.
+8. Ask a medical/safety question and show the agent escalating it to a human rather than answering clinically.
+
+## Current architecture and roadmap
+
+The current implementation uses a resilient batch approach: a scheduled worker revisits each clinic and catches up on due reminders and unattended appointments. It also includes an event webhook endpoint for event-driven invocation.
+
+The next architecture step is to deploy the agent with Amazon Bedrock AgentCore and use Amazon EventBridge Scheduler to trigger work at the precise reminder or appointment-completion time. This would replace polling with event-driven execution. **AgentCore and EventBridge Scheduler are planned enhancements, not required to run the current project.**
+
+## Hackathon submission checklist
+
+- [x] New Strands-agent project that performs real administrative work
+- [x] Public source repository structure
+- [x] MIT open-source license
+- [x] README and architecture diagram
+- [ ] Public deployed demo URL
+- [ ] Public YouTube or Vimeo video, five minutes or less
+- [ ] Devpost project description, AWS Builder ID, and testing instructions
+- [ ] Optional public builder.aws post(s) describing the build journey
+
+## Responsible use and privacy
+
+CareForMe is a hackathon prototype for operational workflows. Do not use real patient data in a demo environment unless you have the legal authority and safeguards to do so. Use synthetic/demo data, protect AWS and Twilio credentials, and configure webhooks and authentication before exposing a deployment publicly.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { name: "Patients", href: "/patients" },
   { name: "Appointments", href: "/appointments" },
   { name: "Follow-ups", href: "/followups" },
-  { name: "Decisions", href: "/decisions" },
 ];
 
 export default function Sidebar() {

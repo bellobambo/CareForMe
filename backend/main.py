@@ -219,6 +219,19 @@ def create_doctor(request: DoctorCreateRequest, clinic_id: str = Depends(get_cur
 def get_all_tasks(clinic_id: str = Depends(get_current_clinic_id)):
     return database.list_tasks(clinic_id)
 
+@app.put("/api/tasks/{task_id}/resolve")
+def resolve_task(task_id: str, clinic_id: str = Depends(get_current_clinic_id)):
+    """Mark a clinic-scoped follow-up or escalation task as resolved by staff."""
+    task = next(
+        (item for item in database.list_tasks(clinic_id) if item.get("id") == task_id),
+        None,
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    resolved_task = database.resolve_task(clinic_id, task_id)
+    return {"message": "Task resolved successfully", "task": resolved_task}
+
 @app.get("/api/agent-actions")
 def get_agent_actions(clinic_id: str = Depends(get_current_clinic_id)):
     return database.list_agent_actions(clinic_id)
@@ -228,8 +241,10 @@ def get_dashboard_stats(clinic_id: str = Depends(get_current_clinic_id)):
     tasks = database.list_tasks(clinic_id)
     appts = database.list_appointments(clinic_id)
 
-    escalations = len([t for t in tasks if t.get('type') == 'ESCALATION'])
-    pending_followups = len([t for t in tasks if t.get('type') != 'ESCALATION' and t.get('status') == 'PENDING'])
+    escalations = len([t for t in tasks if t.get('type') == 'ESCALATION' and t.get('status') == 'REQUIRES_HUMAN_REVIEW'])
+    task_followups = len([t for t in tasks if t.get('type') != 'ESCALATION' and t.get('status') == 'PENDING'])
+    appt_followups = len([a for a in appts if str(a.get('type', '')).lower() == 'follow-up'])
+    pending_followups = task_followups + appt_followups
 
     return {
         "follow_ups": pending_followups,

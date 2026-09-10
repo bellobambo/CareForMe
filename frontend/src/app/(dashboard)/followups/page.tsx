@@ -2,8 +2,8 @@
 
 import { startTransition, useEffect, useState } from "react";
 import axios from "axios";
-import { Alert, Empty, Spin, Tag } from "antd";
-import { ClipboardList, Clock } from "lucide-react";
+import { Alert, Empty, Spin, Tag, Button } from "antd";
+import { ClipboardList, Clock, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
@@ -41,6 +41,19 @@ export default function FollowupsPage() {
     });
   }, []);
 
+  const handleResolve = async (taskId: string) => {
+    try {
+      const token = localStorage.getItem("careforme_token");
+      await axios.put(`${API_URL}/api/tasks/${taskId}/resolve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, status: "RESOLVED" } : t));
+      toast.success("Task marked as resolved!");
+    } catch (e) {
+      toast.error("Failed to resolve task");
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 mb-6">
@@ -74,7 +87,10 @@ export default function FollowupsPage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {task.priority && <Tag color={task.priority === "HIGH" ? "red" : "default"}>{task.priority}</Tag>}
-                  <Tag color={task.status === "REQUIRES_HUMAN_REVIEW" ? "orange" : "default"}>{task.status.replaceAll("_", " ")}</Tag>
+                  <Tag color={task.status === "REQUIRES_HUMAN_REVIEW" ? "orange" : (task.status === "RESOLVED" ? "green" : "default")}>{task.status.replaceAll("_", " ")}</Tag>
+                  {task.status !== "RESOLVED" && (
+                    <Button type="primary" size="small" icon={<CheckCircle size={14} />} onClick={() => handleResolve(task.id)}>Resolve</Button>
+                  )}
                 </div>
               </div>
             ))}

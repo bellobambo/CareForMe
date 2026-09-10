@@ -59,6 +59,11 @@ def init_db():
         [{'AttributeName': 'clinic_id', 'KeyType': 'HASH'}, {'AttributeName': 'id', 'KeyType': 'RANGE'}],
         [{'AttributeName': 'clinic_id', 'AttributeType': 'S'}, {'AttributeName': 'id', 'AttributeType': 'S'}]
     )
+    create_table_if_not_exists(
+        'Doctors',
+        [{'AttributeName': 'clinic_id', 'KeyType': 'HASH'}, {'AttributeName': 'id', 'KeyType': 'RANGE'}],
+        [{'AttributeName': 'clinic_id', 'AttributeType': 'S'}, {'AttributeName': 'id', 'AttributeType': 'S'}]
+    )
     print("Database initialization complete.")
 
 def get_table(name):
@@ -447,3 +452,16 @@ def get_doctor_by_name(clinic_id: str, name: str):
         if d.get('name').lower() == name.lower():
             return d
     return None
+
+def resolve_task(clinic_id: str, task_id: str):
+    table = get_table('Tasks')
+    table.update_item(
+        Key={'clinic_id': clinic_id, 'id': task_id},
+        UpdateExpression='set #status = :s',
+        ExpressionAttributeNames={'#status': 'status'},
+        ExpressionAttributeValues={':s': 'RESOLVED'}
+    )
+    return next(
+        (task for task in list_tasks(clinic_id) if task.get('id') == task_id),
+        None,
+    )
