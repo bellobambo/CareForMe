@@ -13,19 +13,19 @@
 
 ```mermaid
 flowchart TD
-    subgraph Frontend [Frontend (Next.js & React)]
+    subgraph Frontend
         UI[CareForMe Dashboard]
     end
 
-    subgraph Backend [Backend (FastAPI & Python)]
+    subgraph Backend
         API[FastAPI Server]
         Agent[Strands Agent SDK]
         Cron[Hourly Background Cron Job]
     end
     
-    subgraph Services [External Services]
+    subgraph Services
         DB[(AWS DynamoDB)]
-        Twilio[Twilio SMS / WhatsApp]
+        Twilio[Twilio SMS and WhatsApp]
     end
 
     UI <-->|REST API| API
