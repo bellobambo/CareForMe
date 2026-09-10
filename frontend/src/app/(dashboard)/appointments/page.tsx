@@ -58,6 +58,20 @@ const statusTone = (status: string) => {
     return "sky";
 };
 
+const formatAppointmentStatus = (status: string) =>
+    status
+        .toLowerCase()
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+
+const appointmentStatusTagColor = (status: string) => {
+    if (status === "COMPLETED") return "green";
+    if (status === "SCHEDULED") return "blue";
+    if (status === "RESCHEDULED") return "orange";
+    return "default";
+};
+
 
 
 
@@ -163,7 +177,16 @@ export default function AppointmentsPage() {
         { title: "Doctor", dataIndex: "doctor_id", key: "doctor_id" },
         { title: "Duration", key: "duration", render: (_: unknown, appointment: Appointment) => `${appointment.duration || 30} min` },
         { title: "Type", dataIndex: "type", key: "type" },
-        { title: "Status", dataIndex: "status", key: "status", render: (status: string) => <Tag color={status === "SCHEDULED" ? "blue" : status === "RESCHEDULED" ? "orange" : "default"} className="rounded-full px-3">{status}</Tag> },
+        {
+            title: "Status",
+            dataIndex: "status",
+            key: "status",
+            render: (status: string) => (
+                <Tag color={appointmentStatusTagColor(status)} className="rounded-full px-3">
+                    {formatAppointmentStatus(status)}
+                </Tag>
+            ),
+        },
         { title: "", key: "actions", render: (_: unknown, appointment: Appointment) => <Button type="text" icon={<RefreshCw size={16} />} title="Reschedule appointment" onClick={() => openReschedule(appointment)} /> },
     ];
 

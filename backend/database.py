@@ -81,6 +81,13 @@ def _patient_key(table, clinic_id: str, patient_id: str):
         return {'clinic_id': clinic_id, 'id': patient_id}
     return {'id': patient_id}
 
+def _task_key(table, clinic_id: str, task_id: str):
+    """Support both current clinic-scoped and legacy id-only Tasks tables."""
+    key_names = {key['AttributeName'] for key in table.key_schema}
+    if 'clinic_id' in key_names:
+        return {'clinic_id': clinic_id, 'id': task_id}
+    return {'id': task_id}
+
 # --- Clinic CRUD ---
 
 def register_clinic(name: str, admin_email: str, location: str = None):
@@ -456,7 +463,7 @@ def get_doctor_by_name(clinic_id: str, name: str):
 def resolve_task(clinic_id: str, task_id: str):
     table = get_table('Tasks')
     table.update_item(
-        Key={'clinic_id': clinic_id, 'id': task_id},
+        Key=_task_key(table, clinic_id, task_id),
         UpdateExpression='set #status = :s',
         ExpressionAttributeNames={'#status': 'status'},
         ExpressionAttributeValues={':s': 'RESOLVED'}
