@@ -81,12 +81,14 @@ export default function AppointmentsPage() {
 
     const fetchData = useCallback(async () => {
         try {
-            const [{ data: appointmentData }, { data: patientData }] = await Promise.all([
+            const [{ data: appointmentData }, { data: patientData }, { data: doctorData }] = await Promise.all([
                 axios.get<Appointment[]>(`${API_URL}/api/appointments`, authConfig()),
                 axios.get<Patient[]>(`${API_URL}/api/patients`, authConfig()),
+                axios.get(`${API_URL}/api/doctors`, authConfig())
             ]);
             setAppointments(appointmentData);
             setPatients(patientData);
+            setDoctors(doctorData);
         } catch (error) {
             console.error(error);
             toast.error("Failed to load appointment data");
