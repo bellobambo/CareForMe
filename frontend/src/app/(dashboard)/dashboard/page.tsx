@@ -65,7 +65,7 @@ export default function Dashboard() {
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -5 }}
             >
-              <Card className="shadow-sm hover:shadow-md transition-shadow border-gray-100 rounded-[2rem] overflow-hidden" bodyStyle={{ padding: '20px' }}>
+              <Card className="shadow-sm hover:shadow-md transition-shadow border-gray-100 rounded-[2rem] overflow-hidden" styles={{ body: { padding: '20px' } }}>
                 <div className="flex items-center justify-between">
                   <Statistic 
                     title={<span className="text-gray-500 font-bold text-xs uppercase tracking-wider">{stat.title}</span>} 

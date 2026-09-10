@@ -2,9 +2,9 @@
 
 import { startTransition, useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { Button, Form, Input, InputNumber, Modal, Select, Table, Tag } from "antd";
+import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Filter, Plus, RefreshCw, Tag as TagIcon } from "lucide-react";
+import { Button, Form, Input, InputNumber, Modal, Select, Table, Tag , Popover } from "antd";
 import { motion } from "framer-motion";
-import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Filter, Plus, RefreshCw, Settings2, Tag as TagIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
 type Patient = { id: string; name: string };
@@ -193,7 +193,6 @@ export default function AppointmentsPage() {
                                     className="ml-2 min-w-[132px]"
                                     options={[{ value: "ALL", label: "All statuses" }, { value: "SCHEDULED", label: "Scheduled" }, { value: "RESCHEDULED", label: "Rescheduled" }, { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" }]}
                                 />
-                                <Button type="text" icon={<Settings2 size={17} />} aria-label="Calendar settings" />
                                 <Button type="text" icon={isCalendarExpanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />} onClick={() => setIsCalendarExpanded(!isCalendarExpanded)} aria-label="Toggle calendar visibility" />
                             </div>
                         </div>
@@ -225,27 +224,91 @@ export default function AppointmentsPage() {
                                     const dayKey = formatDateKey(day);
                                     const dayAppointments = weekAppointments.filter((appointment) => appointment.date === dayKey);
                                     return <div key={dayKey} className="relative border-l border-[#f1e9e6] bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_119px,#f4eeeb_119px,#f4eeeb_120px)]" style={{ height: hourSlots.length * HOUR_HEIGHT }}>
-                                        {dayAppointments.filter(appt => timeToMinutes(appt.time) >= CALENDAR_START_HOUR * 60).map((appointment) => {
-                                            const startMinutes = timeToMinutes(appointment.time);
-                                            const top = Math.max(4, (startMinutes - CALENDAR_START_HOUR * 60) / 60 * HOUR_HEIGHT);
-                                            const height = Math.max(75, ((appointment.duration || 30) / 60) * HOUR_HEIGHT);
-                                            const tone = statusTone(appointment.status);
-                                            const toneHex = { mint: "#34C759", sky: "#007AFF", amber: "#FF9500", coral: "#FF3B30", gray: "#8E8E93" } as Record<string, string>;
-                                            const eventColor = toneHex[tone];
-                                            return <button key={appointment.id} onClick={() => openReschedule(appointment)} className="absolute left-2 right-2 overflow-hidden rounded-xl border border-gray-100 bg-white/90 backdrop-blur-sm px-2.5 pt-2 pb-3 text-left shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-0.5 hover:shadow-md group z-10" style={{ top, height }} title="Reschedule appointment">
-                                                <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-[2.5px]" style={{ borderColor: eventColor, backgroundColor: "transparent" }} />{formatTime(appointment.time)} - {formatTime(`${String((startMinutes + (appointment.duration || 30)) / 60 | 0).padStart(2, "0")}:${String((startMinutes + (appointment.duration || 30)) % 60).padStart(2, "0")}`)}</span>
-                                                <strong className="block truncate text-xs text-gray-800 mt-1">{patientName(appointment.patient_id)}</strong>
-                                                <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden">
-                                                    <span className="truncate text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors">
-                                                        {appointment.doctor_id}
-                                                    </span>
-                                                    <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide bg-gray-50 text-gray-800 border border-gray-200 capitalize">
-                                                        <TagIcon size={10} className="text-gray-400" />
-                                                        {appointment.type || "new visit"}
-                                                    </span>
-                                                </div>
-                                            </button>;
-                                        })}
+                                        {(() => {
+                                        const validAppts = dayAppointments.filter(appt => timeToMinutes(appt.time) >= CALENDAR_START_HOUR * 60).sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+                                        
+                                        const groupedAppointments: typeof validAppts[] = [];
+                                        let currentGroup: typeof validAppts = [];
+                                        let currentGroupEnd = -1;
+                                        
+                                        validAppts.forEach(appt => {
+                                            const start = timeToMinutes(appt.time);
+                                            const end = start + (appt.duration || 30);
+                                            if (currentGroup.length === 0) {
+                                                currentGroup = [appt];
+                                                currentGroupEnd = end;
+                                            } else {
+                                                if (start < currentGroupEnd) {
+                                                    currentGroup.push(appt);
+                                                    currentGroupEnd = Math.max(currentGroupEnd, end);
+                                                } else {
+                                                    groupedAppointments.push(currentGroup);
+                                                    currentGroup = [appt];
+                                                    currentGroupEnd = end;
+                                                }
+                                            }
+                                        });
+                                        if (currentGroup.length > 0) groupedAppointments.push(currentGroup);
+                                        
+                                        return groupedAppointments.map((group, i) => {
+                                            const firstAppt = group[0];
+                                            const startMinutes = timeToMinutes(firstAppt.time);
+                                            const endMinutes = Math.max(...group.map(a => timeToMinutes(a.time) + (a.duration || 30)));
+                                            const top = Math.max(0, (startMinutes - CALENDAR_START_HOUR * 60) / 60 * HOUR_HEIGHT);
+                                            const height = Math.max(75, ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT);
+                                            
+                                            if (group.length === 1) {
+                                                const appointment = group[0];
+                                                const tone = statusTone(appointment.status);
+                                                const toneHex = { mint: "#34C759", sky: "#007AFF", amber: "#FF9500", coral: "#FF3B30", gray: "#8E8E93" } as Record<string, string>;
+                                                const eventColor = toneHex[tone];
+                                                
+                                                return <button key={appointment.id} onClick={() => openReschedule(appointment)} className="absolute overflow-hidden rounded-xl border bg-white/95 backdrop-blur-md px-2.5 pt-2 pb-3 text-left shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all hover:z-50 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl group" style={{ top, height, left: '4px', width: 'calc(100% - 8px)', zIndex: 10, borderColor: eventColor, borderWidth: "1px" }} title="Reschedule appointment">
+                                                    <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1.5">{formatTime(appointment.time)} - {formatTime(`${String((startMinutes + (appointment.duration || 30)) / 60 | 0).padStart(2, "0")}:${String((startMinutes + (appointment.duration || 30)) % 60).padStart(2, "0")}`)}</span>
+                                                    <strong className="block truncate text-xs text-gray-800 mt-1">{patientName(appointment.patient_id)}</strong>
+                                                    <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden">
+                                                        <span className="truncate text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors">
+                                                            {appointment.doctor_id}
+                                                        </span>
+                                                        <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide bg-gray-50 text-gray-800 border border-gray-200 capitalize">
+                                                            <TagIcon size={10} className="text-gray-400" />
+                                                            {appointment.type || "new visit"}
+                                                        </span>
+                                                    </div>
+                                                </button>;
+                                            }
+                                            
+                                            return (
+                                                <Popover key={`group-${i}`} trigger="hover" placement="right" content={
+                                                    <div className="flex flex-col gap-2 p-1 min-w-[180px]">
+                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Appointment</div>
+                                                        {group.map(a => {
+                                                            const tone = statusTone(a.status);
+                                                            const toneHex = { mint: "#34C759", sky: "#007AFF", amber: "#FF9500", coral: "#FF3B30", gray: "#8E8E93" } as Record<string, string>;
+                                                            return (
+                                                                <div key={a.id} onClick={() => openReschedule(a)} className="cursor-pointer hover:bg-gray-50 p-2.5 rounded-lg border transition-colors shadow-sm" style={{ borderColor: toneHex[tone], borderWidth: "1px" }}>
+                                                                    <div className="text-xs font-extrabold text-gray-800">{formatTime(a.time)} - {patientName(a.patient_id)}</div>
+                                                                    <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1"><span className="inline-flex items-center gap-1 capitalize"><TagIcon size={10} className="text-gray-400" />{a.type || "new visit"}</span> • {a.doctor_id}</div>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                }>
+                                                    <div className="absolute overflow-hidden rounded-xl border border-gray-200 bg-gray-50/95 backdrop-blur-md flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-white hover:border-primary/30 hover:shadow-md transition-all z-20 group" style={{ top, height, left: '4px', width: 'calc(100% - 8px)' }}>
+                                                        <div className="text-center p-2">
+                                                            <div className="flex items-center justify-center gap-1 mb-1">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary/70 animate-pulse delay-75"></div>
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse delay-150"></div>
+                                                            </div>
+                                                            <div className="text-xs font-bold text-gray-700 group-hover:text-primary transition-colors">{group.length} Appointments</div>
+                                                            <div className="text-[10px] text-gray-500 mt-1">{formatTime(firstAppt.time)} - {formatTime(`${String(endMinutes / 60 | 0).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}`)}</div>
+                                                        </div>
+                                                    </div>
+                                                </Popover>
+                                            );
+                                        });
+                                    })()}
                                     </div>;
                                 })}
                             </div>

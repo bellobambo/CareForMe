@@ -65,7 +65,8 @@ def _find_available_slots(clinic_id: str, doctor_name: str, date: str) -> list[s
         and appointment.get("date") == date
         and appointment.get("status") != "CANCELLED"
     }
-    slots = ["09:00", "11:30", "14:00", "15:30"]
+    slots = [f"{h:02d}:00" for h in range(9, 19)] + [f"{h:02d}:30" for h in range(9, 19)] + ["18:15", "18:45"]
+    slots.sort()
     return [slot for slot in slots if slot not in booked]
 
 
@@ -83,10 +84,10 @@ def book_appointment(
         _record(clinic_id, "book_appointment", f"Patient {patient_id} was not found", "FAILED")
         return {"error": "Patient not found for this clinic."}
 
-    available = _find_available_slots(clinic_id, doctor_name, date)
-    if time not in available:
-        _record(clinic_id, "book_appointment", f"Slot {date} {time} was unavailable", "FAILED")
-        return {"error": "That appointment slot is no longer available."}
+    booked = {a.get("time") for a in database.list_appointments(clinic_id) if a.get("doctor_id") == doctor_name and a.get("date") == date and a.get("status") != "CANCELLED"}
+    if time in booked:
+        _record(clinic_id, "book_appointment", f"Slot {date} {time} is double-booked", "FAILED")
+        return {"error": "That exact time is already booked by another patient."}
 
     appointment = database.create_appointment(
         clinic_id, patient_id, doctor_name, date, time, duration
