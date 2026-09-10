@@ -35,7 +35,7 @@ export default function AgentChatWidget() {
 
     try {
       const token = localStorage.getItem("careforme_token");
-      const { data } = await axios.post("http://127.0.0.1:8000/api/chat", 
+      const { data } = await axios.post("https://careforme-api.onrender.com/api/chat", 
         { message: userMsg.content },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -16,7 +16,7 @@ type FollowUpTask = {
   created_at?: string;
 };
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://careforme-api.onrender.com";
 
 export default function FollowupsPage() {
   const [tasks, setTasks] = useState<FollowUpTask[]>([]);

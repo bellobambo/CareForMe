@@ -36,7 +36,7 @@ export default function Sidebar() {
       try {
         const token = localStorage.getItem("careforme_token");
         if (token) {
-          const { data } = await axios.get("http://127.0.0.1:8000/api/clinics/me", {
+          const { data } = await axios.get("https://careforme-api.onrender.com/api/clinics/me", {
             headers: { Authorization: `Bearer ${token}` }
           });
           setClinic(data);

@@ -41,7 +41,7 @@ export default function RegisterPage() {
       }
 
       // 1. Register clinic in backend FIRST (checks for duplicate email)
-      await axios.post("http://127.0.0.1:8000/api/clinics/register", {
+      await axios.post("https://careforme-api.onrender.com/api/clinics/register", {
         name: formData.name,
         admin_email: formData.admin_email,
         location: formData.location

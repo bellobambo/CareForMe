@@ -59,7 +59,7 @@ export default function LoginPage() {
       }
 
       /* --- MOCK LOGIN FOR DEVELOPMENT (Commented out) ---
-      const response = await axios.post("http://127.0.0.1:8000/api/clinics/login", {
+      const response = await axios.post("https://careforme-api.onrender.com/api/clinics/login", {
         email: formData.email,
         password: formData.password
       });

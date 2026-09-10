@@ -15,7 +15,7 @@ export default function Dashboard() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("careforme_token");
-        const { data } = await axios.get("http://127.0.0.1:8000/api/stats", {
+        const { data } = await axios.get("https://careforme-api.onrender.com/api/stats", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStats(data);

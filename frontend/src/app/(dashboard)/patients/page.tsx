@@ -24,7 +24,7 @@ type PatientForm = {
     preferred_contact_method: string;
 };
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://careforme-api.onrender.com";
 
 export default function PatientsPage() {
     const [patients, setPatients] = useState<Patient[]>([]);

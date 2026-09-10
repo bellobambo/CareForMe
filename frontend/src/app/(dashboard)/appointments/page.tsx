@@ -12,7 +12,7 @@ type Appointment = { id: string; patient_id: string; doctor_id: string; date: st
 type AppointmentForm = { patient_id: string; doctor_id: string; date: string; time: string; duration: number; type: string };
 type RescheduleForm = { date: string; time: string };
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://careforme-api.onrender.com";
 const CALENDAR_START_HOUR = 8;
 const CALENDAR_END_HOUR = 24;
 const HOUR_HEIGHT = 120;

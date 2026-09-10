@@ -51,7 +51,7 @@ AUTOMATED BACKGROUND WORKFLOWS:
 If you are invoked for routine background maintenance, you must:
 1. Use check_past_appointments to find appointments that have already passed.
 2. For each missed appointment, send a patient message asking if they would like to reschedule or if they attended. 
-3. Then use mark_appointment_status to mark the appointment as NO_SHOW (if they missed) or COMPLETED (if you confirm they attended)."""
+3. Then use mark_appointment_status to mark the appointment as NO_SHOW.\n4. When texting patients, ALWAYS format the date and time in a human-readable way (e.g., "Sept 10 2026 at 12:15 PM"). (if they missed) or COMPLETED (if you confirm they attended)."""
 
 # Re-initialize the agent since we appended to SYSTEM_PROMPT
 careforme_agent = Agent(
