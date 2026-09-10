@@ -85,3 +85,8 @@ python3 run_agent_cron.py
 
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔮 Future Architecture (Event-Driven Agents)
+Currently, CareForMe uses a robust **Batch-Processing** approach (an hourly cron job) to wake the Strands Agent. This ensures extreme resilience—if the server crashes and restarts, the Agent simply sweeps the database on its next run and catches up on any missed appointments.
+
+However, our next architectural evolution is to integrate **Amazon EventBridge Scheduler** to transition the Agent into a fully **Event-Driven** model. Instead of waking up hourly, the API will dynamically schedule an EventBridge trigger the moment an appointment is booked. EventBridge will then wake the Strands Agent at the exact minute an appointment concludes, allowing for real-time, minute-accurate patient follow-ups and eliminating all unnecessary polling compute.
