@@ -64,6 +64,9 @@ const statusTone = (status: string) => {
 export default function AppointmentsPage() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [patients, setPatients] = useState<Patient[]>([]);
+    const [doctors, setDoctors] = useState<{id: string, name: string, phone: string}[]>([]);
+    const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
+    const [doctorForm] = Form.useForm();
     const [loading, setLoading] = useState(true);
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -97,6 +100,22 @@ export default function AppointmentsPage() {
             void fetchData();
         });
     }, [fetchData]);
+
+    const handleAddDoctor = async (values: { name: string, phone: string }) => {
+        try {
+            setSaving(true);
+            const res = await axios.post(`${API_URL}/api/doctors`, values, authConfig());
+            setDoctors([...doctors, res.data]);
+            setIsAddDoctorOpen(false);
+            doctorForm.resetFields();
+            createForm.setFieldsValue({ doctor_id: res.data.name });
+            toast.success("Doctor added");
+        } catch (e) {
+            toast.error("Failed to add doctor");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const handleSchedule = async (values: AppointmentForm) => {
         setSaving(true);
@@ -324,7 +343,14 @@ export default function AppointmentsPage() {
             <Modal title="Schedule appointment" open={isCreateOpen} onCancel={() => setIsCreateOpen(false)} footer={null} destroyOnHidden>
                 <Form form={createForm} layout="vertical" onFinish={handleSchedule} initialValues={{ duration: 30, type: "new visit" }}>
                     <Form.Item name="patient_id" label="Patient" rules={[{ required: true, message: "Select a patient" }]}><Select showSearch optionFilterProp="label" options={patients.map((patient) => ({ value: patient.id, label: patient.name }))} placeholder="Select patient" /></Form.Item>
-                    <Form.Item name="doctor_id" label="Doctor" rules={[{ required: true, message: "Enter the doctor" }]}><Input placeholder="e.g. Dr. Ade" /></Form.Item>
+                    <div className="flex gap-2 items-end">
+                        <Form.Item name="doctor_id" label="Doctor" rules={[{ required: true, message: "Select a doctor" }]} className="flex-1">
+                            <Select showSearch optionFilterProp="label" options={doctors.map(d => ({ value: d.name, label: d.name }))} placeholder="Select doctor" />
+                        </Form.Item>
+                        <Form.Item>
+                            <Button onClick={() => setIsAddDoctorOpen(true)} icon={<Plus size={16} />} title="Add new doctor" />
+                        </Form.Item>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Form.Item name="date" label="Date" rules={[{ required: true, message: "Enter a date" }]}><Input type="date" /></Form.Item>
                         <Form.Item name="time" label="Time" rules={[{ required: true, message: "Enter a time" }]}><Input type="time" min="08:00" max="23:30" /></Form.Item>
@@ -347,6 +373,14 @@ export default function AppointmentsPage() {
                     <Form.Item name="time" label="New time" rules={[{ required: true }]}><Input type="time" min="08:00" max="23:30" /></Form.Item>
 
                     <div className="flex justify-end gap-3"><Button onClick={() => setRescheduling(null)}>Cancel</Button><Button type="primary" htmlType="submit" loading={saving}>Reschedule</Button></div>
+                </Form>
+            </Modal>
+        
+            <Modal title="Add new doctor" style={{ top: 150 }} open={isAddDoctorOpen} onCancel={() => setIsAddDoctorOpen(false)} footer={null} destroyOnHidden>
+                <Form form={doctorForm} layout="vertical" onFinish={handleAddDoctor}>
+                    <Form.Item name="name" label="Doctor Name" rules={[{ required: true }]}><Input placeholder="e.g. Dr. Sarah Lee" /></Form.Item>
+                    <Form.Item name="phone" label="Phone Number" rules={[{ required: true }]} tooltip="Include country code (e.g. +1234567890)"><Input placeholder="+1234567890" /></Form.Item>
+                    <div className="flex justify-end gap-3"><Button onClick={() => setIsAddDoctorOpen(false)}>Cancel</Button><Button type="primary" htmlType="submit" loading={saving}>Add Doctor</Button></div>
                 </Form>
             </Modal>
         </div>

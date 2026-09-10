@@ -105,3 +105,17 @@ def send_due_appointment_reminders(clinic_id: str, now: datetime | None = None) 
             else:
                 skipped += 1
     return {'sent': sent, 'skipped': skipped}
+
+def send_raw_sms(to_phone: str, message: str):
+    """Send an SMS directly to a phone number (e.g. a doctor)."""
+    if not TWILIO_CLIENT:
+        print(f"Mock SMS to {to_phone}: {message}")
+        return
+    try:
+        TWILIO_CLIENT.messages.create(
+            body=message,
+            from_=TWILIO_PHONE_NUMBER,
+            to=to_phone
+        )
+    except Exception as e:
+        print(f"Error sending SMS to {to_phone}: {e}")

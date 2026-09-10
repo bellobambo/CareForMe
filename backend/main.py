@@ -201,7 +201,21 @@ def reschedule_appointment(
     )
     return {"message": "Appointment rescheduled successfully", "appointment": appointment}
 
+
+class DoctorCreateRequest(BaseModel):
+    name: str
+    phone: str
+
+@app.get("/api/doctors")
+def get_doctors(clinic_id: str = Depends(get_current_clinic_id)):
+    return database.list_doctors(clinic_id)
+
+@app.post("/api/doctors")
+def create_doctor(request: DoctorCreateRequest, clinic_id: str = Depends(get_current_clinic_id)):
+    return database.create_doctor(clinic_id, request.name, request.phone)
+
 @app.get("/api/tasks")
+
 def get_all_tasks(clinic_id: str = Depends(get_current_clinic_id)):
     return database.list_tasks(clinic_id)
 

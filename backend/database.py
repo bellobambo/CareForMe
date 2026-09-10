@@ -365,6 +365,8 @@ def create_task(clinic_id: str, patient_id: str, task_type: str, priority: str =
     table.put_item(Item=item)
     return item
 
+import notifications
+
 def escalate_to_staff(clinic_id: str, patient_id: str, reason: str):
     table = get_table('Tasks')
     task_id = str(uuid4())
@@ -378,6 +380,23 @@ def escalate_to_staff(clinic_id: str, patient_id: str, reason: str):
         'created_at': datetime.now().isoformat()
     }
     table.put_item(Item=item)
+    
+    # SMS Last Doctor
+    try:
+        appts = list_appointments(clinic_id)
+        patient_appts = [a for a in appts if a.get('patient_id') == patient_id]
+        if patient_appts:
+            patient_appts.sort(key=lambda x: x.get('date', '') + x.get('time', ''), reverse=True)
+            last_doctor_name = patient_appts[0].get('doctor_id')
+            if last_doctor_name:
+                doc = get_doctor_by_name(clinic_id, last_doctor_name)
+                if doc and doc.get('phone'):
+                    notifications.send_raw_sms(
+                        doc.get('phone'), 
+                        f"URGENT CareForMe Escalation for patient {patient_id}: {reason}"
+                    )
+    except Exception as e:
+        print("Failed to SMS doctor:", e)
     return item
 
 # --- Agent audit log ---
@@ -405,3 +424,26 @@ def list_agent_actions(clinic_id: str):
 
 if __name__ == "__main__":
     init_db()
+
+def list_doctors(clinic_id: str):
+    table = get_table('Doctors')
+    response = table.query(KeyConditionExpression=Key('clinic_id').eq(clinic_id))
+    return response.get('Items', [])
+
+def create_doctor(clinic_id: str, name: str, phone: str):
+    table = get_table('Doctors')
+    doctor_id = str(uuid4())
+    item = {
+        'clinic_id': clinic_id,
+        'id': doctor_id,
+        'name': name,
+        'phone': phone
+    }
+    table.put_item(Item=item)
+    return item
+
+def get_doctor_by_name(clinic_id: str, name: str):
+    for d in list_doctors(clinic_id):
+        if d.get('name').lower() == name.lower():
+            return d
+    return None
