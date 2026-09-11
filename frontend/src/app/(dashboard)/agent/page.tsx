@@ -43,7 +43,7 @@ export default function AgentPage() {
   const fetchActions = async () => {
     try {
       const token = localStorage.getItem("careforme_token");
-      const { data } = await axios.get<AgentAction[]>("https://careforme-api.onrender.com/api/agent-actions", {
+      const { data } = await axios.get<AgentAction[]>(`${process.env.NEXT_PUBLIC_API_URL || \"http://localhost:8000\"}/api/agent-actions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setActions(data);
@@ -69,7 +69,7 @@ export default function AgentPage() {
     try {
       const token = localStorage.getItem("careforme_token");
       const { data } = await axios.post(
-        "https://careforme-api.onrender.com/api/chat",
+        `${process.env.NEXT_PUBLIC_API_URL || \"http://localhost:8000\"}/api/chat`,
         { message: userMsg.content },
         { headers: { Authorization: `Bearer ${token}` } },
       );

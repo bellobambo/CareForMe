@@ -16,7 +16,7 @@ type FollowUpTask = {
   created_at?: string;
 };
 
-const API_URL = "https://careforme-api.onrender.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function FollowupsPage() {
   const [tasks, setTasks] = useState<FollowUpTask[]>([]);
@@ -30,7 +30,7 @@ export default function FollowupsPage() {
           const { data } = await axios.get<FollowUpTask[]>(`${API_URL}/api/tasks`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setTasks(data.filter((task) => task.status !== "COMPLETED"));
+          setTasks(data.filter((task) => task.status !== "RESOLVED"));
         } catch (error) {
           console.error(error);
           toast.error("Failed to load follow-up queue");
