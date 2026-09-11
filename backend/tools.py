@@ -77,10 +77,13 @@ def get_available_slots(clinic_id: str, doctor_name: str, date: str) -> list[str
 
 
 def _find_available_slots(clinic_id: str, doctor_name: str, date: str) -> list[str]:
+    doctor = database.get_doctor_by_name(clinic_id, doctor_name)
+    doctor_id = doctor.get("id") if doctor else doctor_name
+    
     booked = {
         appointment.get("time")
         for appointment in database.list_appointments(clinic_id)
-        if appointment.get("doctor_id") == doctor_name
+        if appointment.get("doctor_id") in (doctor_id, doctor_name)
         and appointment.get("date") == date
         and appointment.get("status") != "CANCELLED"
     }
@@ -103,13 +106,20 @@ def book_appointment(
         _record(clinic_id, "book_appointment", f"Patient {patient_id} was not found", "FAILED")
         return {"error": "Patient not found for this clinic."}
 
-    booked = {a.get("time") for a in database.list_appointments(clinic_id) if a.get("doctor_id") == doctor_name and a.get("date") == date and a.get("status") != "CANCELLED"}
+    doctor = database.get_doctor_by_name(clinic_id, doctor_name)
+    if not doctor:
+        _record(clinic_id, "book_appointment", f"Doctor {doctor_name} was not found", "FAILED")
+        return {"error": "Doctor not found for this clinic."}
+        
+    doctor_id = doctor.get("id")
+
+    booked = {a.get("time") for a in database.list_appointments(clinic_id) if a.get("doctor_id") in (doctor_id, doctor_name) and a.get("date") == date and a.get("status") != "CANCELLED"}
     if time in booked:
         _record(clinic_id, "book_appointment", f"Slot {date} {time} is double-booked", "FAILED")
         return {"error": "That exact time is already booked by another patient."}
 
     appointment = database.create_appointment(
-        clinic_id, patient_id, doctor_name, date, time, duration
+        clinic_id, patient_id, doctor_id, date, time, duration
     )
     notifications.send_appointment_notification(clinic_id, appointment, "confirmation")
     _record(clinic_id, "book_appointment", f"Booked {date} {time} for {patient_id}", "COMPLETED")

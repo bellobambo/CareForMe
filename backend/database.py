@@ -400,9 +400,15 @@ def escalate_to_staff(clinic_id: str, patient_id: str, reason: str):
         patient_appts = [a for a in appts if a.get('patient_id') == patient_id]
         if patient_appts:
             patient_appts.sort(key=lambda x: x.get('date', '') + x.get('time', ''), reverse=True)
-            last_doctor_name = patient_appts[0].get('doctor_id')
-            if last_doctor_name:
-                doc = get_doctor_by_name(clinic_id, last_doctor_name)
+            last_doctor_id = patient_appts[0].get('doctor_id')
+            if last_doctor_id:
+                # Fallback checking both name (old logic) and id (new logic)
+                doc = None
+                doctors = list_doctors(clinic_id)
+                for d in doctors:
+                    if d.get('id') == last_doctor_id or d.get('name').lower() == last_doctor_id.lower():
+                        doc = d
+                        break
                 if doc and doc.get('phone'):
                     notifications.send_raw_sms(
                         doc.get('phone'), 
