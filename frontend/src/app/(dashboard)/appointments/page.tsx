@@ -108,7 +108,15 @@ export default function AppointmentsPage() {
                 axios.get(`${API_URL}/api/doctors`, authConfig())
             ]);
             setAppointments(appointmentData);
-            setPatients(patientData);
+            setPatients(patientData.map(p => {
+                let method = p.preferred_contact_method;
+                if (method) {
+                    const lower = method.toLowerCase();
+                    if (lower === "whatsapp") method = "WhatsApp";
+                    else if (lower === "sms") method = "SMS";
+                }
+                return { ...p, preferred_contact_method: method };
+            }));
             setDoctors(doctorData);
         } catch (error) {
             console.error(error);
@@ -198,15 +206,17 @@ export default function AppointmentsPage() {
                 } catch (error) {
                     toast.error("Could not cancel appointment");
                 }
-            }
         });
     };
+
+    const patientName = (id: string) => patients.find(p => p.id === id)?.name || id;
+    const doctorName = (id: string) => doctors.find(d => d.id === id)?.name || id;
 
     const columns = [
         { title: "Date", dataIndex: "date", key: "date", render: (text: string) => <span className="font-medium">{text}</span> },
         { title: "Time", dataIndex: "time", key: "time" },
-        { title: "Patient", key: "patient", render: (_: unknown, appointment: Appointment) => patients.find((patient) => patient.id === appointment.patient_id)?.name || appointment.patient_id },
-        { title: "Doctor", dataIndex: "doctor_id", key: "doctor_id" },
+        { title: "Patient", key: "patient", render: (_: unknown, appointment: Appointment) => patientName(appointment.patient_id) },
+        { title: "Doctor", key: "doctor", render: (_: unknown, appointment: Appointment) => doctorName(appointment.doctor_id) },
         { title: "Duration", key: "duration", render: (_: unknown, appointment: Appointment) => `${appointment.duration || 30} min` },
         {
             title: "Type",
@@ -357,7 +367,7 @@ export default function AppointmentsPage() {
                                                     <strong className="block truncate text-xs text-gray-800 mt-1">{patientName(appointment.patient_id)}</strong>
                                                     <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden">
                                                         <span className="truncate text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors">
-                                                            {appointment.doctor_id}
+                                                            {doctorName(appointment.doctor_id)}
                                                         </span>
                                                         <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide bg-gray-50 text-gray-800 border border-gray-200 capitalize">
                                                             <TagIcon size={10} className="text-gray-400" />
@@ -377,7 +387,7 @@ export default function AppointmentsPage() {
                                                             return (
                                                                 <div key={a.id} onClick={() => openReschedule(a)} className="cursor-pointer hover:bg-gray-50 p-2.5 rounded-lg border transition-colors shadow-sm" style={{ borderColor: toneHex[tone], borderWidth: "1px" }}>
                                                                     <div className="text-xs font-extrabold text-gray-800">{formatTime(a.time)} - {patientName(a.patient_id)}</div>
-                                                                    <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1"><span className="inline-flex items-center gap-1 capitalize"><TagIcon size={10} className="text-gray-400" />{a.type || "new visit"}</span> • {a.doctor_id}</div>
+                                                                    <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1"><span className="inline-flex items-center gap-1 capitalize"><TagIcon size={10} className="text-gray-400" />{a.type || "new visit"}</span> • {doctorName(a.doctor_id)}</div>
                                                                 </div>
                                                             )
                                                         })}
@@ -415,7 +425,7 @@ export default function AppointmentsPage() {
                     <Form.Item name="patient_id" label="Patient" rules={[{ required: true, message: "Select a patient" }]}><Select showSearch optionFilterProp="label" options={patients.map((patient) => ({ value: patient.id, label: patient.preferred_contact_method ? `${patient.name} (${patient.preferred_contact_method})` : patient.name }))} placeholder="Select patient" /></Form.Item>
                     <div className="flex gap-2 items-end">
                         <Form.Item name="doctor_id" label="Doctor" rules={[{ required: true, message: "Select a doctor" }]} className="flex-1">
-                            <Select showSearch optionFilterProp="label" options={doctors.map(d => ({ value: d.name, label: d.name }))} placeholder="Select doctor" />
+                            <Select showSearch optionFilterProp="label" options={doctors.map(d => ({ value: d.id, label: `${d.name} (${d.phone})` }))} placeholder="Select doctor" />
                         </Form.Item>
                         <Form.Item>
                             <Button onClick={() => setIsAddDoctorOpen(true)} icon={<Plus size={16} />} title="Add new doctor" />

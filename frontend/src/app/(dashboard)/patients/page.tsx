@@ -39,7 +39,16 @@ export default function PatientsPage() {
             const { data } = await axios.get<Patient[]>(`${API_URL}/api/patients`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setPatients(data);
+            const formatted = data.map(p => {
+                let method = p.preferred_contact_method;
+                if (method) {
+                    const lower = method.toLowerCase();
+                    if (lower === "whatsapp") method = "WhatsApp";
+                    else if (lower === "sms") method = "SMS";
+                }
+                return { ...p, preferred_contact_method: method };
+            });
+            setPatients(formatted);
         } catch (error) {
             console.error(error);
             toast.error("Failed to load patients");

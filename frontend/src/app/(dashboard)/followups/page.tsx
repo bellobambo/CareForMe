@@ -14,6 +14,18 @@ type FollowUpTask = {
   priority?: string;
   status: string;
   created_at?: string;
+  is_appointment?: boolean;
+  appointment_date?: string;
+  appointment_time?: string;
+};
+
+type Appointment = {
+  id: string;
+  patient_id: string;
+  type?: string;
+  status: string;
+  date: string;
+  time: string;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -27,10 +39,28 @@ export default function FollowupsPage() {
     const fetchTasks = async () => {
       try {
         const token = localStorage.getItem("careforme_token");
-        const { data } = await axios.get<FollowUpTask[]>(`${API_URL}/api/tasks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTasks(data.sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()));
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        const [tasksRes, apptsRes] = await Promise.all([
+          axios.get<FollowUpTask[]>(`${API_URL}/api/tasks`, { headers }),
+          axios.get<Appointment[]>(`${API_URL}/api/appointments`, { headers })
+        ]);
+
+        const apptFollowUps: FollowUpTask[] = apptsRes.data
+          .filter(a => (a.type || "").toLowerCase().replace("-", "") === "followup")
+          .map(a => ({
+            id: a.id,
+            type: "FOLLOW_UP_APPOINTMENT",
+            patient_id: a.patient_id,
+            status: a.status,
+            created_at: `${a.date}T${a.time}:00`,
+            is_appointment: true,
+            appointment_date: a.date,
+            appointment_time: a.time,
+          }));
+
+        const combined = [...tasksRes.data, ...apptFollowUps].sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime());
+        setTasks(combined);
       } catch (error) {
         console.error(error);
         toast.error("Failed to load follow-up queue");
@@ -64,8 +94,12 @@ export default function FollowupsPage() {
   };
 
   const filteredTasks = tasks.filter(task => {
-    if (filter === "PENDING") return task.status !== "RESOLVED";
-    if (filter === "RESOLVED") return task.status === "RESOLVED";
+    const isApptResolved = task.is_appointment && ["COMPLETED", "CANCELLED", "NO_SHOW"].includes(task.status);
+    const isTaskResolved = task.status === "RESOLVED";
+    const isResolved = isApptResolved || isTaskResolved;
+
+    if (filter === "PENDING") return !isResolved;
+    if (filter === "RESOLVED") return isResolved;
     if (filter === "ESCALATION") return task.type === "ESCALATION";
     if (filter === "RESCHEDULE") return task.type === "RESCHEDULE_REQUESTED";
     return true; // "ALL"
@@ -118,8 +152,8 @@ export default function FollowupsPage() {
                 </div>
                 <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 self-start sm:self-auto ml-11 sm:ml-0">
                   {task.priority && <Tag color={task.priority === "HIGH" ? "red" : "default"}>{task.priority}</Tag>}
-                  <Tag color={task.status === "REQUIRES_HUMAN_REVIEW" ? "orange" : (task.status === "RESOLVED" ? "green" : "default")}>{task.status.replaceAll("_", " ")}</Tag>
-                  {task.status !== "RESOLVED" && (
+                  <Tag color={task.status === "REQUIRES_HUMAN_REVIEW" ? "orange" : (task.status === "RESOLVED" || task.status === "COMPLETED" ? "green" : "default")}>{task.status.replaceAll("_", " ")}</Tag>
+                  {task.status !== "RESOLVED" && !task.is_appointment && (
                     <Button type="primary" size="small" icon={<CheckCircle size={14} />} onClick={() => handleResolve(task.id)}>Resolve</Button>
                   )}
                 </div>
