@@ -20,14 +20,11 @@ for clinic in clinics:
     
     # Standard reminders
     try:
-        requests.post(
-            "http://127.0.0.1:8000/api/reminders/run",
-            json={"clinic_id": clinic_id},
-            headers={"x-reminder-token": token}
-        )
-        print("Triggered standard reminders.")
+        import notifications
+        res = notifications.send_due_appointment_reminders(clinic_id)
+        print(f"Triggered standard reminders. Sent: {res.get('sent', 0)}, Skipped: {res.get('skipped', 0)}")
     except Exception as e:
-        print("Could not reach API for standard reminders:", e)
+        print("Could not process standard reminders:", e)
 
     # Strands agent background maintenance
     print("Waking up AI Agent for background maintenance...")
