@@ -436,7 +436,7 @@ export default function AppointmentsPage() {
                     <Form.Item name="date" label="New date" rules={[{ required: true }]}><Input type="date" /></Form.Item>
                     <Form.Item name="time" label="New time" rules={[{ required: true }]}><Input type="time" min="08:00" max="23:30" /></Form.Item>
 
-                    <div className="flex justify-end gap-3"><Button onClick={() => setRescheduling(null)}>Cancel</Button><Button type="primary" htmlType="submit" loading={saving}>Reschedule</Button></div>
+                    <div className="flex justify-end gap-3"><Button onClick={() => setRescheduling(null)}>Close</Button><Button type="primary" htmlType="submit" loading={saving}>Reschedule</Button></div>
                 </Form>
             </Modal>
         
