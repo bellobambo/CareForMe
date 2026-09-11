@@ -68,7 +68,24 @@ export default function AboutPage() {
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">The Architecture</h3>
               <p className="text-gray-600 leading-relaxed">
-                CareForMe is powered by Amazon Bedrock and the Strands Agent SDK. It operates via an EventBridge-simulated webhook that triggers a background Python worker. This worker autonomously queries Amazon DynamoDB to fetch patient records, read calendar availability, and book appointments without ever requiring a human to initiate a chat.
+                CareForMe is powered by Amazon Bedrock (Nova Lite) and the Strands Agent SDK. It operates via an EventBridge-simulated webhook that triggers a background Python worker. This worker autonomously queries Amazon DynamoDB to fetch patient records, read calendar availability, and book appointments without ever requiring a human to initiate a chat.
+              </p>
+            </div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row gap-8 items-start bg-gray-900 text-white p-8 rounded-[2rem] border border-gray-800"
+          >
+            <div className="w-16 h-16 shrink-0 bg-white/10 rounded-2xl flex items-center justify-center text-white">
+              <Users size={32} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-3">Agents for Humans</h3>
+              <p className="text-gray-400 leading-relaxed">
+                We believe AI shouldn't just be a chatbot sitting in a corner. It should do real work for real people. By acting as a tireless administrative assistant, CareForMe elevates clinic staff so they can focus entirely on the human element of healthcare: empathy, connection, and clinical care.
               </p>
             </div>
           </motion.div>
@@ -80,13 +97,17 @@ export default function AboutPage() {
           transition={{ delay: 0.5 }}
           className="mt-20 text-center"
         >
-          <Link href="/dashboard">
+          <Link href="/register">
             <button className="bg-gray-900 text-white font-bold text-lg px-8 py-4 rounded-full hover:bg-gray-800 shadow-lg transition-transform hover:scale-105 active:scale-95">
-              Experience the Dashboard
+              Try Now
             </button>
           </Link>
         </motion.div>
       </main>
+      
+      <footer className="max-w-6xl mx-auto px-6 py-12 text-center text-gray-400 border-t border-gray-100 mt-20">
+        <p>© 2026 CareForMe. Built for the AWS Agents for Humans Hackathon.</p>
+      </footer>
     </div>
   );
 }

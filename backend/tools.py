@@ -24,6 +24,25 @@ def get_patient_info(clinic_id: str, patient_name: str) -> dict:
     _record(clinic_id, "get_patient_info", f"Retrieved patient {patient_name}", status)
     return patient or {"error": f"Patient '{patient_name}' not found."}
 
+@tool
+def create_patient_record(
+    clinic_id: str,
+    name: str,
+    phone: str,
+    email: str = "",
+    preferred_contact_method: str = "SMS",
+) -> dict:
+    """Create a new patient record for the clinic."""
+    patient = database.create_patient(
+        clinic_id=clinic_id,
+        name=name,
+        email=email or None,
+        phone=phone or None,
+        preferred_contact_method=preferred_contact_method
+    )
+    _record(clinic_id, "create_patient", f"Created patient {name}", "COMPLETED")
+    return patient
+
 
 @tool
 def get_pending_escalations(clinic_id: str) -> dict:
@@ -187,6 +206,7 @@ def mark_appointment_status(clinic_id: str, appointment_id: str, status: str) ->
     return {"message": f"Appointment successfully marked as {status}."}
 ALL_TOOLS = [
     get_patient_info,
+    create_patient_record,
     get_pending_escalations,
     get_available_slots,
     book_appointment,

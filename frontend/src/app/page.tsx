@@ -43,7 +43,7 @@ export default function LandingPage() {
           </h2>
 
           <p className="text-xl text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Stop wasting hours on administrative phone calls. CareForMe silently coordinates follow-ups, reschedules appointments, and flags critical issues—so you can focus on patient care.
+            Stop wasting hours on administrative phone calls. CareForMe silently coordinates follow-ups, reschedules appointments, and flags critical issues so you can focus on patient care.
           </p>
 
           <div className="flex items-center justify-center gap-4">
@@ -75,29 +75,67 @@ export default function LandingPage() {
           transition={{ delay: 0.3, duration: 0.6 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-32 w-full text-left"
         >
-          <div className="p-8 rounded-[2rem] bg-gray-50 border border-gray-100">
+          <div className="p-8 rounded-[2rem] bg-gray-50 border border-gray-100 transition-all hover:shadow-md">
             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary mb-6 shadow-sm">
               <Clock size={24} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Automated Follow-ups</h3>
-            <p className="text-gray-500">Events trigger the agent to coordinate routine follow-up tasks without human intervention.</p>
+            <p className="text-gray-500">Events trigger the agent to coordinate routine follow-up tasks without human intervention, checking past appointments and sending SMS text messages to patients.</p>
           </div>
-          <div className="p-8 rounded-[2rem] bg-gray-50 border border-gray-100">
+          <div className="p-8 rounded-[2rem] bg-gray-50 border border-gray-100 transition-all hover:shadow-md">
             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary mb-6 shadow-sm">
               <Bot size={24} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Autonomous Loop</h3>
-            <p className="text-gray-500">Agent connects directly to DynamoDB to check schedules and book appointments instantly.</p>
+            <p className="text-gray-500">Agent connects directly to DynamoDB to check schedules, find available slots, and book or reschedule appointments instantly through real backend tools.</p>
           </div>
-          <div className="p-8 rounded-[2rem] bg-gray-50 border border-gray-100">
+          <div className="p-8 rounded-[2rem] bg-gray-50 border border-gray-100 transition-all hover:shadow-md">
             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-500 mb-6 shadow-sm">
               <ShieldAlert size={24} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Clinical Escalation</h3>
-            <p className="text-gray-500">Strict safety boundaries ensure any medical complaints are immediately escalated to human doctors.</p>
+            <p className="text-gray-500">Strict safety boundaries ensure the agent never gives medical advice. Any symptom complaints are immediately escalated to human doctors via a dashboard task.</p>
+          </div>
+        </motion.div>
+
+        {/* How It Works Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mt-32 w-full text-left bg-gray-900 text-white p-12 md:p-16 rounded-[3rem]"
+        >
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className="text-4xl font-extrabold mb-6">Built for the Real World</h2>
+            <p className="text-lg text-gray-400">CareForMe bridges the gap between powerful AI and necessary human oversight. Here is how it keeps your clinic running smoothly.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div>
+              <h4 className="text-primary font-bold text-lg mb-2">01. Smart Scheduling</h4>
+              <p className="text-gray-400">Patients receive automated SMS text notifications for their appointments. They can reply 1 to confirm or 3 to cancel, directly updating the DynamoDB backend without staff lifting a finger.</p>
+            </div>
+            <div>
+              <h4 className="text-primary font-bold text-lg mb-2">02. Strands Agent AI</h4>
+              <p className="text-gray-400">Staff can chat with the Amazon Nova Lite powered Strands Agent to perform bulk administrative tasks, or let it run autonomously on a schedule to chase down no-shows and handle re-bookings.</p>
+            </div>
+            <div>
+              <h4 className="text-primary font-bold text-lg mb-2">03. Verifiable Actions</h4>
+              <p className="text-gray-400">Every action the AI takes is recorded in a transparent Audit Log on your dashboard. No black boxes. You see exactly what tools were called and what data was changed.</p>
+            </div>
+            <div>
+              <h4 className="text-primary font-bold text-lg mb-2">04. Safety-Bounded</h4>
+              <p className="text-gray-400">CareForMe is an administrative assistant, not a doctor. By design, it delegates clinical decisions back to humans, ensuring patient safety remains uncompromised.</p>
+            </div>
           </div>
         </motion.div>
       </main>
+
+      {/* Footer */}
+      <footer className="max-w-6xl mx-auto px-6 py-12 text-center text-gray-400 border-t border-gray-100 mt-20">
+        <p>© 2026 CareForMe. Built for the AWS Agents for Humans Hackathon.</p>
+      </footer>
     </div>
   );
 }

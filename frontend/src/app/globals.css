@@ -24,6 +24,10 @@ body {
   overflow-x: hidden;
 }
 
+button, a, [role="button"] {
+  cursor: pointer !important;
+}
+
 /* Force AntD to use Nunito */
 body,
 .ant-typography,
