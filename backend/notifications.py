@@ -55,13 +55,13 @@ def send_appointment_notification(clinic_id: str, appointment: dict, kind: str) 
 
     if kind == 'confirmation':
         claim = 'confirmation'
-        text = f"CareForMe: Your appointment is confirmed for {fmt_date} at {fmt_time}. Reply 1 to confirm or 2 to reschedule. Reply STOP to opt out."
+        text = f"CareForMe: Your appointment is scheduled for {fmt_date} at {fmt_time}. Reply 1 to confirm, 2 to reschedule, or 3 to cancel. Reply STOP to opt out."
     elif kind == 'reminder_24h':
         claim = 'reminder_24h'
-        text = f"CareForMe reminder: You have an appointment tomorrow at {fmt_time} on {fmt_date}. Reply 1 to confirm or 2 to reschedule."
+        text = f"CareForMe reminder: You have an appointment tomorrow at {fmt_time} on {fmt_date}. Reply 1 to confirm, 2 to reschedule, or 3 to cancel."
     elif kind == 'reminder_2h':
         claim = 'reminder_2h'
-        text = f"CareForMe reminder: Your appointment is in about 2 hours at {fmt_time}. Reply 1 to confirm or 2 to reschedule."
+        text = f"CareForMe reminder: Your appointment is in about 2 hours at {fmt_time}. Reply 1 to confirm, 2 to reschedule, or 3 to cancel."
     elif kind == 'reminder_10m':
         claim = 'reminder_10m'
         text = f"CareForMe reminder: Your appointment is starting in 10 minutes at {fmt_time}! See you soon."

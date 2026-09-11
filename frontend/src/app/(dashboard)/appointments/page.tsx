@@ -2,7 +2,7 @@
 
 import { startTransition, useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Filter, Plus, RefreshCw, Tag as TagIcon } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Filter, Plus, RefreshCw, Tag as TagIcon, XCircle } from "lucide-react";
 import { Button, Form, Input, InputNumber, Modal, Select, Table, Tag , Popover } from "antd";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -52,23 +52,30 @@ const formatTime = (time: string) => {
 
 const statusTone = (status: string) => {
     if (status === "RESCHEDULED") return "amber";
-    if (status === "COMPLETED") return "mint";
+    if (status === "CONFIRMED") return "mint";
     if (status === "CANCELLED") return "coral";
     if (status === "NO_SHOW") return "gray";
     return "sky";
 };
 
+const tableStatus = (status: string) => status;
+
 const formatAppointmentStatus = (status: string) =>
-    status
+    tableStatus(status)
         .toLowerCase()
         .split("_")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
 
+const formatAppointmentType = (type?: string) => {
+    const value = type?.trim() || "new visit";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
 const appointmentStatusTagColor = (status: string) => {
-    if (status === "COMPLETED") return "green";
-    if (status === "SCHEDULED") return "blue";
-    if (status === "RESCHEDULED") return "orange";
+    if (tableStatus(status) === "CONFIRMED") return "green";
+    if (tableStatus(status) === "SCHEDULED") return "blue";
+    if (tableStatus(status) === "RESCHEDULED") return "orange";
     return "default";
 };
 
@@ -170,31 +177,63 @@ export default function AppointmentsPage() {
         }
     };
 
+    const handleCancel = async (appointmentId: string) => {
+        Modal.confirm({
+            title: "Cancel Appointment",
+            content: "Are you sure you want to cancel this appointment?",
+            okText: "Yes, Cancel",
+            cancelText: "No, Keep it",
+            okButtonProps: { danger: true },
+            onOk: async () => {
+                try {
+                    await axios.patch(`${API_URL}/api/appointments/${appointmentId}/status`, { status: "CANCELLED" }, authConfig());
+                    toast.success("Appointment cancelled");
+                    await fetchData();
+                } catch (error) {
+                    toast.error("Could not cancel appointment");
+                }
+            }
+        });
+    };
+
     const columns = [
         { title: "Date", dataIndex: "date", key: "date", render: (text: string) => <span className="font-medium">{text}</span> },
         { title: "Time", dataIndex: "time", key: "time" },
         { title: "Patient", key: "patient", render: (_: unknown, appointment: Appointment) => patients.find((patient) => patient.id === appointment.patient_id)?.name || appointment.patient_id },
         { title: "Doctor", dataIndex: "doctor_id", key: "doctor_id" },
         { title: "Duration", key: "duration", render: (_: unknown, appointment: Appointment) => `${appointment.duration || 30} min` },
-        { title: "Type", dataIndex: "type", key: "type" },
+        {
+            title: "Type",
+            dataIndex: "type",
+            key: "type",
+            render: (type?: string) => formatAppointmentType(type),
+        },
         {
             title: "Status",
             dataIndex: "status",
             key: "status",
             render: (status: string) => (
-                <Tag color={appointmentStatusTagColor(status)} className="rounded-full px-3">
+                <Tag
+                    color={appointmentStatusTagColor(status)}
+                    className={`rounded-full px-3 ${tableStatus(status) === "CONFIRMED" ? "!border-[#b7eb8f] !bg-[#f6ffed] !text-[#389e0d]" : ""}`}
+                >
                     {formatAppointmentStatus(status)}
                 </Tag>
             ),
         },
-        { title: "", key: "actions", render: (_: unknown, appointment: Appointment) => <Button type="text" icon={<RefreshCw size={16} />} title="Reschedule appointment" onClick={() => openReschedule(appointment)} /> },
+        { title: "", key: "actions", render: (_: unknown, appointment: Appointment) => (
+            <div className="flex gap-2">
+                <Button type="text" icon={<RefreshCw size={16} />} title="Reschedule appointment" onClick={() => openReschedule(appointment)} />
+                <Button type="text" danger icon={<XCircle size={16} />} title="Cancel appointment" onClick={() => handleCancel(appointment.id)} />
+            </div>
+        ) },
     ];
 
     const patientName = (patientId: string) => patients.find((patient) => patient.id === patientId)?.name || patientId;
     const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekAnchor, index));
     const weekAppointments = appointments.filter((appointment) => {
         const isInWeek = appointment.date >= formatDateKey(weekDays[0]) && appointment.date <= formatDateKey(weekDays[6]);
-        return isInWeek && (statusFilter === "ALL" || appointment.status === statusFilter);
+        return isInWeek && (statusFilter === "ALL" || tableStatus(appointment.status) === statusFilter);
     });
     const hourSlots = Array.from({ length: CALENDAR_END_HOUR - CALENDAR_START_HOUR }, (_, index) => CALENDAR_START_HOUR + index);
     const weekLabel = weekAnchor.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
@@ -235,14 +274,14 @@ export default function AppointmentsPage() {
                                     onChange={setStatusFilter}
                                     suffixIcon={<Filter size={14} />}
                                     className="ml-2 min-w-[132px]"
-                                    options={[{ value: "ALL", label: "All statuses" }, { value: "SCHEDULED", label: "Scheduled" }, { value: "RESCHEDULED", label: "Rescheduled" }, { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" }]}
+                                    options={[{ value: "ALL", label: "All statuses" }, { value: "SCHEDULED", label: "Scheduled" }, { value: "CONFIRMED", label: "Confirmed" }, { value: "RESCHEDULED", label: "Rescheduled" }, { value: "NO_SHOW", label: "No-show" }, { value: "CANCELLED", label: "Cancelled" }]}
                                 />
                                 <Button type="text" icon={isCalendarExpanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />} onClick={() => setIsCalendarExpanded(!isCalendarExpanded)} aria-label="Toggle calendar visibility" />
                             </div>
                         </div>
                         <div className="flex items-center gap-5 mt-5 text-xs font-bold text-[#897e7a] flex-wrap">
                             <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#007AFF]" /> Scheduled</span>
-                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#34C759]" /> Completed</span>
+                            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#34C759]" /> Confirmed</span>
                             <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#FF9500]" /> Rescheduled</span>
                             <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#8E8E93]" /> No-show</span>
                             <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30]" /> Cancelled</span>

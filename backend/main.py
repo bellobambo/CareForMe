@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 import os
 import re
-from typing import Optional
+from typing import Literal, Optional
 from urllib.parse import parse_qs
 
 from fastapi import FastAPI, BackgroundTasks, Depends, Header, HTTPException, Request, Response
@@ -97,6 +97,9 @@ class AppointmentRescheduleRequest(BaseModel):
     date: str
     time: str
     color: Optional[str] = None
+
+class AppointmentStatusUpdateRequest(BaseModel):
+    status: Literal["SCHEDULED", "CONFIRMED", "COMPLETED", "RESCHEDULED", "NO_SHOW", "CANCELLED"]
 
 class ReminderRunRequest(BaseModel):
     clinic_id: str
@@ -200,6 +203,17 @@ def reschedule_appointment(
         notifications.send_appointment_notification, clinic_id, appointment, "confirmation"
     )
     return {"message": "Appointment rescheduled successfully", "appointment": appointment}
+
+@app.patch("/api/appointments/{appointment_id}/status")
+def update_appointment_status(
+    appointment_id: str,
+    request: AppointmentStatusUpdateRequest,
+    clinic_id: str = Depends(get_current_clinic_id),
+):
+    if not database.get_appointment(clinic_id, appointment_id):
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    database.update_appointment_status(clinic_id, appointment_id, request.status)
+    return {"message": "Appointment status updated", "appointment": database.get_appointment(clinic_id, appointment_id)}
 
 
 class DoctorCreateRequest(BaseModel):
@@ -308,7 +322,7 @@ def run_reminders(request: ReminderRunRequest, x_reminder_token: str = Header(de
 
 @app.post("/api/twilio/inbound")
 async def twilio_inbound(request: Request):
-    """Handle STOP, confirmation, and reschedule replies from patients."""
+    """Handle opt-out, confirmation, reschedule, and cancellation replies from patients."""
     form = parse_qs((await request.body()).decode("utf-8"))
     sender = form.get("From", [""])[0]
     body = form.get("Body", [""])[0].strip().upper()
@@ -318,7 +332,7 @@ async def twilio_inbound(request: Request):
     if patient:
         clinic_id = patient["clinic_id"]
         patient_id = patient["id"]
-        if body in {"STOP", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"}:
+        if body in {"STOP", "UNSUBSCRIBE", "END", "QUIT"}:
             database.update_patient_contact_preference(clinic_id, patient_id, "NONE")
             reply = "You are unsubscribed from CareForMe texts. Contact your clinic to opt back in."
         else:
@@ -333,8 +347,11 @@ async def twilio_inbound(request: Request):
             elif body in {"2", "NO", "RESCHEDULE"}:
                 database.create_task(clinic_id, patient_id, "RESCHEDULE_REQUESTED")
                 reply = "We notified your clinic that you would like to reschedule."
+            elif body in {"3", "CANCEL", "CANCEL APPOINTMENT"} and upcoming:
+                database.update_appointment_status(clinic_id, upcoming[0]["id"], "CANCELLED")
+                reply = "Your upcoming appointment has been cancelled. Contact your clinic if you would like to book another time."
             else:
-                reply = "Reply 1 to confirm, 2 to reschedule, or STOP to opt out."
+                reply = "Reply 1 to confirm, 2 to reschedule, 3 to cancel, or STOP to opt out."
 
     escaped = reply.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return Response(
