@@ -184,17 +184,18 @@ def get_patient_by_name(clinic_id: str, name: str):
             return p
     return None
 
-def find_patient_by_phone(phone: str):
-    """Find a patient for an inbound SMS after normalizing common phone formatting."""
+def find_patients_by_phone(phone: str):
+    """Find all patients for an inbound SMS after normalizing common phone formatting."""
     normalized = ''.join(character for character in phone if character.isdigit())
     table = get_table('Patients')
     response = table.scan()
+    matches = []
     for patient in response.get('Items', []):
         patient_phone = patient.get('phone') or patient.get('contact') or ''
         candidate = ''.join(character for character in patient_phone if character.isdigit())
         if candidate and candidate[-10:] == normalized[-10:]:
-            return patient
-    return None
+            matches.append(patient)
+    return matches
 
 def update_patient_contact_preference(clinic_id: str, patient_id: str, preference: str):
     table = get_table('Patients')

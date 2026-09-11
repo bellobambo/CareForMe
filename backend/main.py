@@ -330,29 +330,36 @@ async def twilio_inbound(request: Request):
         form = parse_qs(request.url.query)
     sender = form.get("From", [""])[0]
     body = form.get("Body", [""])[0].strip().upper()
-    patient = database.find_patient_by_phone(sender)
+    patients = database.find_patients_by_phone(sender)
     reply = "We could not match this number. Please contact your clinic directly."
 
-    if patient:
-        clinic_id = patient["clinic_id"]
-        patient_id = patient["id"]
+    if patients:
         if body in {"STOP", "UNSUBSCRIBE", "END", "QUIT"}:
-            database.update_patient_contact_preference(clinic_id, patient_id, "NONE")
+            for patient in patients:
+                database.update_patient_contact_preference(patient["clinic_id"], patient["id"], "NONE")
             reply = "You are unsubscribed from CareForMe texts. Contact your clinic to opt back in."
         else:
-            upcoming = [
-                appointment for appointment in database.get_patient_appointments(clinic_id, patient_id)
-                if appointment.get("status") in {"SCHEDULED", "RESCHEDULED"}
-            ]
+            upcoming = []
+            for patient in patients:
+                upcoming.extend([
+                    appointment for appointment in database.get_patient_appointments(patient["clinic_id"], patient["id"])
+                    if appointment.get("status") in {"SCHEDULED", "RESCHEDULED"}
+                ])
             upcoming.sort(key=lambda item: f"{item.get('date', '')}T{item.get('time', '')}")
+            
             if body in {"1", "YES", "CONFIRM", "CONFIRMED"} and upcoming:
-                database.update_appointment_status(clinic_id, upcoming[0]["id"], "CONFIRMED")
+                database.update_appointment_status(upcoming[0]["clinic_id"], upcoming[0]["id"], "CONFIRMED")
                 reply = "Thanks, your appointment is confirmed."
             elif body in {"2", "NO", "RESCHEDULE"}:
-                database.create_task(clinic_id, patient_id, "RESCHEDULE_REQUESTED")
+                # If they want to reschedule, but there are no upcoming appointments, we can still create a task for the first patient matched
+                # But it's better to associate it with the upcoming appointment if there is one.
+                if upcoming:
+                    database.create_task(upcoming[0]["clinic_id"], upcoming[0]["patient_id"], "RESCHEDULE_REQUESTED")
+                else:
+                    database.create_task(patients[0]["clinic_id"], patients[0]["id"], "RESCHEDULE_REQUESTED")
                 reply = "We notified your clinic that you would like to reschedule."
             elif body in {"3", "CANCEL", "CANCEL APPOINTMENT"} and upcoming:
-                database.update_appointment_status(clinic_id, upcoming[0]["id"], "CANCELLED")
+                database.update_appointment_status(upcoming[0]["clinic_id"], upcoming[0]["id"], "CANCELLED")
                 reply = "Your upcoming appointment has been cancelled. Contact your clinic if you would like to book another time."
             else:
                 reply = "Reply 1 to confirm, 2 to reschedule, 3 to cancel, or STOP to opt out."
