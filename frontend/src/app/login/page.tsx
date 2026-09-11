@@ -59,7 +59,7 @@ export default function LoginPage() {
       }
 
       /* --- MOCK LOGIN FOR DEVELOPMENT (Commented out) ---
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || \"http://localhost:8000\"}/api/clinics/login`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/clinics/login`, {
         email: formData.email,
         password: formData.password
       });
