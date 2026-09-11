@@ -206,6 +206,7 @@ export default function AppointmentsPage() {
                 } catch (error) {
                     toast.error("Could not cancel appointment");
                 }
+            }
         });
     };
 
@@ -245,7 +246,7 @@ export default function AppointmentsPage() {
         ) },
     ];
 
-    const patientName = (patientId: string) => patients.find((patient) => patient.id === patientId)?.name || patientId;
+
     const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekAnchor, index));
     const weekAppointments = appointments.filter((appointment) => {
         const isInWeek = appointment.date >= formatDateKey(weekDays[0]) && appointment.date <= formatDateKey(weekDays[6]);

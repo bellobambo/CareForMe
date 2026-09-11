@@ -179,9 +179,36 @@ def create_patient(
 
 def get_patient_by_name(clinic_id: str, name: str):
     patients = list_patients(clinic_id)
+    name = name.lower()
+    
+    # 1. Exact match or substring
     for p in patients:
-        if p.get('name', '').lower() == name.lower():
+        p_name = p.get('name', '').lower()
+        if name in p_name or p_name in name:
             return p
+            
+    # 2. Very simple fuzzy match (Levenshtein distance <= 2)
+    def levenshtein(s1, s2):
+        if len(s1) < len(s2):
+            return levenshtein(s2, s1)
+        if len(s2) == 0:
+            return len(s1)
+        previous_row = range(len(s2) + 1)
+        for i, c1 in enumerate(s1):
+            current_row = [i + 1]
+            for j, c2 in enumerate(s2):
+                insertions = previous_row[j + 1] + 1
+                deletions = current_row[j] + 1
+                substitutions = previous_row[j] + (c1 != c2)
+                current_row.append(min(insertions, deletions, substitutions))
+            previous_row = current_row
+        return previous_row[-1]
+        
+    for p in patients:
+        p_name = p.get('name', '').lower()
+        if levenshtein(name, p_name) <= 2:
+            return p
+            
     return None
 
 def find_patients_by_phone(phone: str):
@@ -396,8 +423,15 @@ def escalate_to_staff(clinic_id: str, patient_id: str, reason: str):
     
     # SMS Last Doctor
     try:
+        real_patient_id = patient_id
+        # if the agent passed a name instead of an ID, resolve it
+        if patient_id and '-' not in patient_id:
+            resolved_patient = get_patient_by_name(clinic_id, patient_id)
+            if resolved_patient:
+                real_patient_id = resolved_patient.get('id')
+
         appts = list_appointments(clinic_id)
-        patient_appts = [a for a in appts if a.get('patient_id') == patient_id]
+        patient_appts = [a for a in appts if a.get('patient_id') == real_patient_id]
         if patient_appts:
             patient_appts.sort(key=lambda x: x.get('date', '') + x.get('time', ''), reverse=True)
             last_doctor_id = patient_appts[0].get('doctor_id')
