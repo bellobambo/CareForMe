@@ -410,12 +410,14 @@ def escalate_to_staff(clinic_id: str, patient_id: str, reason: str):
                         doc = d
                         break
                 if doc and doc.get('phone'):
-                    notifications.send_raw_sms(
+                    import messaging
+                    messaging.send_patient_message(
                         doc.get('phone'), 
-                        f"URGENT CareForMe Escalation for patient {patient_id}: {reason}"
+                        f"URGENT CareForMe Escalation for patient {patient_id}: {reason}",
+                        "WHATSAPP"
                     )
     except Exception as e:
-        print("Failed to SMS doctor:", e)
+        print("Failed to WhatsApp doctor:", e)
     return item
 
 # --- Agent audit log ---
