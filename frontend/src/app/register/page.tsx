@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Building, Mail, MapPin, Lock, Eye, EyeOff, KeyRound } from "lucide-react";
+import { ArrowRight, ArrowLeft, Building, Mail, MapPin, Lock, Eye, EyeOff, KeyRound } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
@@ -95,7 +95,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+      
+      <Link href="/" className="absolute top-6 left-6 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
+        <ArrowLeft size={20} />
+        <span className="font-medium hidden sm:inline">Back to Home</span>
+      </Link>
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center">
         <Link href="/">
