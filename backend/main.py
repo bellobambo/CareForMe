@@ -320,10 +320,14 @@ def run_reminders(request: ReminderRunRequest, x_reminder_token: str = Header(de
         raise HTTPException(status_code=403, detail="Invalid reminder worker token")
     return notifications.send_due_appointment_reminders(request.clinic_id)
 
-@app.post("/api/twilio/inbound")
+@app.api_route("/api/twilio/inbound", methods=["GET", "POST"])
+@app.api_route("/api/twilio/inbound/", methods=["GET", "POST"])
 async def twilio_inbound(request: Request):
     """Handle opt-out, confirmation, reschedule, and cancellation replies from patients."""
-    form = parse_qs((await request.body()).decode("utf-8"))
+    if request.method == "POST":
+        form = parse_qs((await request.body()).decode("utf-8"))
+    else:
+        form = parse_qs(request.url.query)
     sender = form.get("From", [""])[0]
     body = form.get("Body", [""])[0].strip().upper()
     patient = database.find_patient_by_phone(sender)
@@ -356,5 +360,5 @@ async def twilio_inbound(request: Request):
     escaped = reply.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return Response(
         content=f"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Message>{escaped}</Message></Response>",
-        media_type="application/xml",
+        media_type="text/xml",
     )
