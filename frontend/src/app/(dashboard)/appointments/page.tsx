@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
 type Patient = { id: string; name: string };
-type Appointment = { id: string; patient_id: string; doctor_id: string; date: string; time: string; duration?: number; type?: string; status: string };
+type Appointment = { id: string; patient_id: string; doctor_id: string; date: string; time: string; duration?: number; type?: string; status: string; reason?: string };
 type AppointmentForm = { patient_id: string; doctor_id: string; date: string; time: string; duration: number; type: string };
 type RescheduleForm = { date: string; time: string };
 
@@ -432,6 +432,12 @@ export default function AppointmentsPage() {
             </Modal>
 
             <Modal title="Reschedule appointment" open={Boolean(rescheduling)} onCancel={() => setRescheduling(null)} footer={null} destroyOnHidden>
+                {rescheduling?.reason && (
+                    <div className="mb-5 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Appointment Reason</div>
+                        <div className="text-sm text-gray-700 leading-relaxed">{rescheduling.reason}</div>
+                    </div>
+                )}
                 <Form form={rescheduleForm} layout="vertical" onFinish={handleReschedule}>
                     <Form.Item name="date" label="New date" rules={[{ required: true }]}><Input type="date" /></Form.Item>
                     <Form.Item name="time" label="New time" rules={[{ required: true }]}><Input type="time" min="08:00" max="23:30" /></Form.Item>
