@@ -24,22 +24,30 @@ export default function FollowupsPage() {
   const [filter, setFilter] = useState("PENDING");
 
   useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const token = localStorage.getItem("careforme_token");
+        const { data } = await axios.get<FollowUpTask[]>(`${API_URL}/api/tasks`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTasks(data.sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()));
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load follow-up queue");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     startTransition(() => {
-      void (async () => {
-        try {
-          const token = localStorage.getItem("careforme_token");
-          const { data } = await axios.get<FollowUpTask[]>(`${API_URL}/api/tasks`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setTasks(data.sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()));
-        } catch (error) {
-          console.error(error);
-          toast.error("Failed to load follow-up queue");
-        } finally {
-          setLoading(false);
-        }
-      })();
+      void fetchTasks();
     });
+
+    const handleRefresh = () => {
+      void fetchTasks();
+    };
+    window.addEventListener("careforme_refresh_data", handleRefresh);
+    return () => window.removeEventListener("careforme_refresh_data", handleRefresh);
   }, []);
 
   const handleResolve = async (taskId: string) => {

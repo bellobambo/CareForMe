@@ -52,6 +52,12 @@ export default function PatientsPage() {
         startTransition(() => {
             void fetchPatients();
         });
+        
+        const handleRefresh = () => {
+            void fetchPatients();
+        };
+        window.addEventListener("careforme_refresh_data", handleRefresh);
+        return () => window.removeEventListener("careforme_refresh_data", handleRefresh);
     }, []);
 
     const handleAddPatient = async (values: any) => {

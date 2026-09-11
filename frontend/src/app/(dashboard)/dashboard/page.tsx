@@ -26,6 +26,12 @@ export default function Dashboard() {
       }
     };
     fetchStats();
+    
+    const handleRefresh = () => {
+      fetchStats();
+    };
+    window.addEventListener("careforme_refresh_data", handleRefresh);
+    return () => window.removeEventListener("careforme_refresh_data", handleRefresh);
   }, []);
 
   const statCards = [

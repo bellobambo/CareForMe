@@ -43,6 +43,21 @@ def create_patient_record(
     _record(clinic_id, "create_patient", f"Created patient {name}", "COMPLETED")
     return patient
 
+@tool
+def create_doctor_record(
+    clinic_id: str,
+    name: str,
+    phone: str,
+) -> dict:
+    """Create a new doctor record for the clinic."""
+    doctor = database.create_doctor(
+        clinic_id=clinic_id,
+        name=name,
+        phone=phone
+    )
+    _record(clinic_id, "create_doctor", f"Created doctor {name}", "COMPLETED")
+    return doctor
+
 
 @tool
 def get_pending_escalations(clinic_id: str) -> dict:
@@ -224,6 +239,7 @@ def mark_appointment_status(clinic_id: str, appointment_id: str, status: str) ->
 ALL_TOOLS = [
     get_patient_info,
     create_patient_record,
+    create_doctor_record,
     get_pending_escalations,
     get_available_slots,
     book_appointment,

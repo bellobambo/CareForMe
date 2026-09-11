@@ -122,6 +122,12 @@ export default function AppointmentsPage() {
         startTransition(() => {
             void fetchData();
         });
+        
+        const handleRefresh = () => {
+            void fetchData();
+        };
+        window.addEventListener("careforme_refresh_data", handleRefresh);
+        return () => window.removeEventListener("careforme_refresh_data", handleRefresh);
     }, [fetchData]);
 
     const handleAddDoctor = async (values: { name: string, phone: string }) => {

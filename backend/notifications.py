@@ -104,11 +104,12 @@ def send_due_appointment_reminders(clinic_id: str, now: datetime | None = None) 
             continue
 
         kind = None
-        if appointment_at - current <= timedelta(minutes=10):
+        diff = appointment_at - current
+        if diff <= timedelta(minutes=10):
             kind = 'reminder_10m'
-        elif appointment_at - current <= timedelta(hours=2):
+        elif timedelta(minutes=30) <= diff <= timedelta(hours=2):
             kind = 'reminder_2h'
-        elif appointment_at - current <= timedelta(hours=24):
+        elif timedelta(hours=3) <= diff <= timedelta(hours=24):
             kind = 'reminder_24h'
         if kind:
             result = send_appointment_notification(clinic_id, appointment, kind)

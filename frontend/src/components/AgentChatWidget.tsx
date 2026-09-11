@@ -40,6 +40,7 @@ export default function AgentChatWidget() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessages(prev => [...prev, { id: Date.now().toString(), role: "agent", content: data.response }]);
+      window.dispatchEvent(new Event("careforme_refresh_data"));
     } catch (error) {
       toast.error("Failed to connect to agent.");
     } finally {
