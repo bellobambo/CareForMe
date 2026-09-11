@@ -7,7 +7,7 @@ import { Button, Form, Input, InputNumber, Modal, Select, Table, Tag , Popover }
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
-type Patient = { id: string; name: string };
+type Patient = { id: string; name: string; preferred_contact_method?: string };
 type Appointment = { id: string; patient_id: string; doctor_id: string; date: string; time: string; duration?: number; type?: string; status: string; reason?: string };
 type AppointmentForm = { patient_id: string; doctor_id: string; date: string; time: string; duration: number; type: string };
 type RescheduleForm = { date: string; time: string };
@@ -406,7 +406,7 @@ export default function AppointmentsPage() {
 
             <Modal title="Schedule appointment" open={isCreateOpen} onCancel={() => setIsCreateOpen(false)} footer={null} destroyOnHidden>
                 <Form form={createForm} layout="vertical" onFinish={handleSchedule} initialValues={{ duration: 30, type: "new visit" }}>
-                    <Form.Item name="patient_id" label="Patient" rules={[{ required: true, message: "Select a patient" }]}><Select showSearch optionFilterProp="label" options={patients.map((patient) => ({ value: patient.id, label: patient.name }))} placeholder="Select patient" /></Form.Item>
+                    <Form.Item name="patient_id" label="Patient" rules={[{ required: true, message: "Select a patient" }]}><Select showSearch optionFilterProp="label" options={patients.map((patient) => ({ value: patient.id, label: patient.preferred_contact_method ? `${patient.name} (${patient.preferred_contact_method})` : patient.name }))} placeholder="Select patient" /></Form.Item>
                     <div className="flex gap-2 items-end">
                         <Form.Item name="doctor_id" label="Doctor" rules={[{ required: true, message: "Select a doctor" }]} className="flex-1">
                             <Select showSearch optionFilterProp="label" options={doctors.map(d => ({ value: d.name, label: d.name }))} placeholder="Select doctor" />
