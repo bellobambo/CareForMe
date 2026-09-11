@@ -18,6 +18,7 @@ export default function LandingPage() {
         <div className="flex items-center gap-8 text-gray-600 font-bold">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
+          <Link href="/how-to-use" className="hover:text-primary transition-colors">How to Use</Link>
           <Link href="/login" className="hover:text-primary transition-colors">Login</Link>
           <Link href="/register" className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm">
             Register Clinic

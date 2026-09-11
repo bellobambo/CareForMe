@@ -18,6 +18,7 @@ export default function AboutPage() {
         <div className="flex items-center gap-8 text-gray-600 font-bold">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <Link href="/about" className="text-primary transition-colors">About Us</Link>
+          <Link href="/how-to-use" className="hover:text-primary transition-colors">How to Use</Link>
           <Link href="/dashboard" className="bg-gray-900 text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition-colors">
             Clinic Login
           </Link>
