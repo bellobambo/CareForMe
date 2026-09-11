@@ -88,8 +88,8 @@ export default function AgentPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-6 h-[80vh]">
-      <div className="flex flex-col bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden relative">
+    <div className="max-w-7xl mx-auto flex flex-col xl:grid xl:grid-cols-[minmax(0,1fr)_340px] gap-6 h-[calc(100vh-8rem)] xl:h-[80vh]">
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden relative">
         <div className="bg-primary/10 px-5 py-3 border-b border-primary/20 flex items-center gap-3">
           <div className="bg-primary p-1.5 rounded-full text-white">
             <Bot size={20} />
@@ -165,7 +165,7 @@ export default function AgentPage() {
           </form>
         </div>
       </div>
-      <aside className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 overflow-y-auto">
+      <aside className="h-[250px] xl:h-auto shrink-0 bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-bold text-gray-800">Agent activity</h2>

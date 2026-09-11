@@ -15,11 +15,11 @@ export default function AboutPage() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-800">CareForMe</h1>
         </div>
-        <div className="flex items-center gap-8 text-gray-600 font-bold">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <Link href="/about" className="text-primary transition-colors">About Us</Link>
-          <Link href="/how-to-use" className="hover:text-primary transition-colors">How to Use</Link>
-          <Link href="/dashboard" className="bg-gray-900 text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition-colors">
+        <div className="flex items-center gap-4 md:gap-8 text-gray-600 font-bold text-sm md:text-base">
+          <Link href="/" className="hidden md:block hover:text-primary transition-colors">Home</Link>
+          <Link href="/about" className="hidden md:block text-primary transition-colors">About Us</Link>
+          <Link href="/how-to-use" className="hidden md:block hover:text-primary transition-colors">How to Use</Link>
+          <Link href="/dashboard" className="bg-gray-900 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full hover:bg-gray-800 transition-colors whitespace-nowrap">
             Clinic Login
           </Link>
         </div>

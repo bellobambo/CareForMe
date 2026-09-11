@@ -124,8 +124,8 @@ export default function PatientsPage() {
             </div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-                <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm">
-                    <Table dataSource={patients} columns={columns} rowKey="id" loading={loading} pagination={{ pageSize: 8 }} size="small" />
+                <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm overflow-x-auto">
+                    <Table dataSource={patients} columns={columns} rowKey="id" loading={loading} pagination={{ pageSize: 8 }} size="small" scroll={{ x: 600 }} />
                 </div>
             </motion.div>
 

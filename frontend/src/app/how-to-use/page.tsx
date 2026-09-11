@@ -15,12 +15,12 @@ export default function HowToUsePage() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-800">CareForMe</h1>
         </div>
-        <div className="flex items-center gap-8 text-gray-600 font-bold">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
-          <Link href="/how-to-use" className="text-primary transition-colors">How to Use</Link>
+        <div className="flex items-center gap-4 md:gap-8 text-gray-600 font-bold text-sm md:text-base">
+          <Link href="/" className="hidden md:block hover:text-primary transition-colors">Home</Link>
+          <Link href="/about" className="hidden md:block hover:text-primary transition-colors">About Us</Link>
+          <Link href="/how-to-use" className="hidden md:block text-primary transition-colors">How to Use</Link>
           <Link href="/login" className="hover:text-primary transition-colors">Login</Link>
-          <Link href="/register" className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+          <Link href="/register" className="bg-primary text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap">
             Register Clinic
           </Link>
         </div>

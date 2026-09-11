@@ -271,7 +271,7 @@ export default function AppointmentsPage() {
                                 </div>
                                 <p className="text-sm text-[#897e7a] mt-1">A calmer view of every handoff, follow-up, and patient arrival.</p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <Button type="text" icon={<ChevronLeft size={17} />} onClick={() => moveWeek(-7)} aria-label="Previous week" />
                                 <Button className="!rounded-xl !border-[#eadfdb] !font-bold !text-[#584c48]" onClick={resetToCurrentWeek}>Today</Button>
                                 <Button type="text" icon={<ChevronRight size={17} />} onClick={() => moveWeek(7)} aria-label="Next week" />

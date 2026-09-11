@@ -74,7 +74,7 @@ export default function AgentChatWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-white rounded-[1.5rem] border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[calc(100vw-3rem)] sm:w-[380px] h-[520px] max-h-[calc(100vh-6rem)] bg-white rounded-[1.5rem] border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-primary/10 px-4 py-3 border-b border-primary/20 flex items-center justify-between shrink-0">

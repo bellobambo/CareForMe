@@ -73,16 +73,18 @@ export default function FollowupsPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 bg-gray-100 rounded-xl text-gray-700"><ClipboardList size={20} /></div>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-800">Follow-up queue</h1>
-          <p className="text-sm text-gray-500 mt-1">The agent works these tasks in the background and surfaces exceptions here.</p>
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 flex-1">
+            <div className="p-2.5 bg-gray-100 rounded-xl text-gray-700 shrink-0"><ClipboardList size={20} /></div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Follow-up queue</h1>
+              <p className="text-sm text-gray-500 mt-1">The agent works these tasks in the background and surfaces exceptions here.</p>
+            </div>
         </div>
         <Select 
           value={filter} 
           onChange={setFilter} 
-          style={{ width: 160 }}
+          className="w-full sm:w-[160px]"
           options={[
             { value: "PENDING", label: "Pending tasks" },
             { value: "ESCALATION", label: "Escalations" },
@@ -105,16 +107,16 @@ export default function FollowupsPage() {
         {loading ? <div className="flex justify-center py-16"><Spin size="large" /></div> : filteredTasks.length === 0 ? <Empty description="No tasks found for this filter" className="py-12" /> : (
           <div className="space-y-3">
             {filteredTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between gap-4 border border-gray-100 rounded-2xl p-4">
-                <div className="flex items-start gap-3 min-w-0">
+              <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-100 rounded-2xl p-4">
+                <div className="flex items-start gap-3 min-w-0 w-full sm:w-auto">
                   <div className="p-2 bg-gray-100 rounded-xl text-gray-700 shrink-0"><Clock size={17} /></div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-bold text-gray-800 truncate">{task.type.replaceAll("_", " ")}</p>
                     <p className="text-sm text-gray-500">Patient: {task.patient_id}</p>
                     {task.created_at && <p className="text-xs text-gray-400 mt-1">Created {new Date(task.created_at).toLocaleString()}</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 self-start sm:self-auto ml-11 sm:ml-0">
                   {task.priority && <Tag color={task.priority === "HIGH" ? "red" : "default"}>{task.priority}</Tag>}
                   <Tag color={task.status === "REQUIRES_HUMAN_REVIEW" ? "orange" : (task.status === "RESOLVED" ? "green" : "default")}>{task.status.replaceAll("_", " ")}</Tag>
                   {task.status !== "RESOLVED" && (

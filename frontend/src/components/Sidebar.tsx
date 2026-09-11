@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { name: "Follow-ups", href: "/followups" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar(props: { isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const [clinic, setClinic] = useState<{ name: string, admin_email: string } | null>(null);
@@ -48,7 +48,12 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <div className="w-[260px] h-[calc(100vh-3rem)] m-6 bg-white border-2 border-gray-200 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col fixed left-0 top-0 z-50">
+    <div className={`w-[260px] h-[calc(100vh-3rem)] m-6 bg-white border-2 border-gray-200 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 md:translate-x-0 ${props.isOpen ? "translate-x-0" : "-translate-x-[150%]"}`}>
+      {props.onClose && (
+        <button onClick={props.onClose} className="md:hidden absolute top-6 right-6 p-2 bg-gray-100 rounded-full">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        </button>
+      )}
       <div className="p-8 pb-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -68,7 +73,7 @@ export default function Sidebar() {
           const num = `0${index + 1}`;
 
           return (
-            <Link key={item.name} href={item.href} className="block">
+            <Link key={item.name} href={item.href} className="block" onClick={() => props.onClose?.()}>
               <motion.div
                 whileHover={{ x: 6 }}
                 whileTap={{ scale: 0.98 }}

@@ -15,12 +15,12 @@ export default function LandingPage() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-800">CareForMe</h1>
         </div>
-        <div className="flex items-center gap-8 text-gray-600 font-bold">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
-          <Link href="/how-to-use" className="hover:text-primary transition-colors">How to Use</Link>
+        <div className="flex items-center gap-4 md:gap-8 text-gray-600 font-bold text-sm md:text-base">
+          <Link href="/" className="hidden md:block hover:text-primary transition-colors">Home</Link>
+          <Link href="/about" className="hidden md:block hover:text-primary transition-colors">About Us</Link>
+          <Link href="/how-to-use" className="hidden md:block hover:text-primary transition-colors">How to Use</Link>
           <Link href="/login" className="hover:text-primary transition-colors">Login</Link>
-          <Link href="/register" className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+          <Link href="/register" className="bg-primary text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap">
             Register Clinic
           </Link>
         </div>
@@ -47,12 +47,12 @@ export default function LandingPage() {
             Stop wasting hours on administrative phone calls. CareForMe silently coordinates follow-ups, reschedules appointments, and flags critical issues so you can focus on patient care.
           </p>
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/register">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-primary text-white font-bold text-lg px-8 py-4 rounded-full flex items-center gap-2 shadow-lg shadow-primary/30"
+                className="bg-primary text-white font-bold text-lg px-8 py-4 rounded-full flex items-center gap-2 shadow-lg shadow-primary/30 w-full sm:w-auto justify-center"
               >
                 Register your Clinic <ArrowRight size={20} />
               </motion.button>
@@ -61,7 +61,7 @@ export default function LandingPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gray-50 text-gray-800 font-bold text-lg px-8 py-4 rounded-full border border-gray-200 hover:border-gray-300"
+                className="bg-gray-50 text-gray-800 font-bold text-lg px-8 py-4 rounded-full border border-gray-200 hover:border-gray-300 w-full sm:w-auto justify-center"
               >
                 Clinic Login
               </motion.button>
