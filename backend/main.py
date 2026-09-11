@@ -339,11 +339,13 @@ async def twilio_inbound(request: Request):
                 database.update_patient_contact_preference(patient["clinic_id"], patient["id"], "NONE")
             reply = "You are unsubscribed from CareForMe texts. Contact your clinic to opt back in."
         else:
+            from datetime import datetime
+            now_str = datetime.now().strftime("%Y-%m-%dT%H:%M")
             upcoming = []
             for patient in patients:
                 upcoming.extend([
                     appointment for appointment in database.get_patient_appointments(patient["clinic_id"], patient["id"])
-                    if appointment.get("status") in {"SCHEDULED", "RESCHEDULED"}
+                    if appointment.get("status") in {"SCHEDULED", "RESCHEDULED"} and f"{appointment.get('date', '')}T{appointment.get('time', '')}" >= now_str
                 ])
             upcoming.sort(key=lambda item: f"{item.get('date', '')}T{item.get('time', '')}")
             
