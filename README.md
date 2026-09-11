@@ -93,10 +93,21 @@ The agent is built with the Strands Agents SDK and an Amazon Bedrock model (Amaz
 | Check past appointments | Finds unattended appointments for follow-up |
 | Mark appointment status | Updates operational status such as `NO_SHOW` |
 
-The agent is reachable in two ways:
+The agent is reachable in three highly autonomous ways:
 
-- **Staff-directed:** authenticated staff can ask it to complete administrative work in the dashboard chat.
-- **Autonomous:** `run_agent_cron.py` wakes it for each clinic to perform scheduled maintenance without a staff prompt.
+### 1. Autonomous Background Maintenance (The Scheduled Heartbeat)
+We use `run_agent_cron.py` (which can be deployed as a Render Cron Job) as an event trigger. When the cron job runs, it doesn't execute hardcoded `if/else` statements for clinic logic. Instead, it literally sends a natural language prompt to the agent: *"Please perform routine background maintenance..."* 
+From there, the Strands Agent takes over entirely autonomously:
+* **Tool Calling**: It decides on its own to call the `check_past_appointments` tool to query DynamoDB.
+* **Reasoning**: If it finds appointments that are in the past but marked as "SCHEDULED", it reasons that the patient no-showed.
+* **Taking Action**: It autonomously calls the `send_patient_message` tool to dynamically text the patient, and then calls `mark_appointment_status` to update DynamoDB to `NO_SHOW`. 
+
+### 2. Event-Driven Escalations (Webhooks & EventBridge)
+When the system receives an event (e.g., via the `/api/events` webhook), the backend simply throws a prompt at the Strands agent: *"Patient X is due for a follow-up. Please check their records, find available slots if needed, and send them a message."*
+The agent acts completely autonomously, figuring out how to check their records and send the follow-up text without requiring brittle, hand-written procedural code.
+
+### 3. Staff-Directed Conversational Autonomy
+Authenticated clinic staff can ask the agent to complete administrative work in the dashboard chat. The Strands agent autonomously uses its read tools to retrieve real-time patient data from DynamoDB, count pending escalations, and answer administrative queries on the fly.
 
 ## Technology
 

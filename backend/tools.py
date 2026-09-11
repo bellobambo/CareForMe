@@ -137,6 +137,13 @@ def reschedule_appointment(
         return {"error": "Appointment not found for this clinic."}
 
     updated = database.reschedule_appointment(clinic_id, appointment_id, new_date, new_time)
+    
+    patient_id = updated.get("patient_id")
+    if patient_id:
+        for t in database.list_tasks(clinic_id):
+            if t.get("patient_id") == patient_id and t.get("type") == "RESCHEDULE_REQUESTED" and t.get("status") != "RESOLVED":
+                database.resolve_task(clinic_id, t.get("id"))
+
     status = "COMPLETED" if updated and updated.get("date") == new_date and updated.get("time") == new_time else "FAILED"
     _record(clinic_id, "reschedule_appointment", f"Moved {appointment_id} to {new_date} {new_time}", status)
     return {"message": "Appointment rescheduled successfully", "appointment": updated}

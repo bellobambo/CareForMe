@@ -2,7 +2,7 @@
 
 import { startTransition, useEffect, useState } from "react";
 import axios from "axios";
-import { Alert, Empty, Spin, Tag, Button } from "antd";
+import { Alert, Empty, Spin, Tag, Button, Select } from "antd";
 import { ClipboardList, Clock, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -21,6 +21,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function FollowupsPage() {
   const [tasks, setTasks] = useState<FollowUpTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("PENDING");
 
   useEffect(() => {
     startTransition(() => {
@@ -30,7 +31,7 @@ export default function FollowupsPage() {
           const { data } = await axios.get<FollowUpTask[]>(`${API_URL}/api/tasks`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setTasks(data.filter((task) => task.status !== "RESOLVED"));
+          setTasks(data.sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()));
         } catch (error) {
           console.error(error);
           toast.error("Failed to load follow-up queue");
@@ -54,14 +55,34 @@ export default function FollowupsPage() {
     }
   };
 
+  const filteredTasks = tasks.filter(task => {
+    if (filter === "PENDING") return task.status !== "RESOLVED";
+    if (filter === "RESOLVED") return task.status === "RESOLVED";
+    if (filter === "ESCALATION") return task.type === "ESCALATION";
+    if (filter === "RESCHEDULE") return task.type === "RESCHEDULE_REQUESTED";
+    return true; // "ALL"
+  });
+
   return (
     <div className="max-w-5xl mx-auto">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 mb-6">
         <div className="p-2.5 bg-gray-100 rounded-xl text-gray-700"><ClipboardList size={20} /></div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-800">Follow-up queue</h1>
           <p className="text-sm text-gray-500 mt-1">The agent works these tasks in the background and surfaces exceptions here.</p>
         </div>
+        <Select 
+          value={filter} 
+          onChange={setFilter} 
+          style={{ width: 160 }}
+          options={[
+            { value: "PENDING", label: "Pending tasks" },
+            { value: "ESCALATION", label: "Escalations" },
+            { value: "RESCHEDULE", label: "Reschedule requests" },
+            { value: "RESOLVED", label: "Resolved tasks" },
+            { value: "ALL", label: "All tasks" }
+          ]}
+        />
       </motion.div>
 
       <div className="mb-6 rounded-2xl bg-amber-50 border border-amber-100 p-4 flex gap-3 text-amber-800 text-sm">
@@ -73,9 +94,9 @@ export default function FollowupsPage() {
       </div>
 
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5">
-        {loading ? <div className="flex justify-center py-16"><Spin size="large" /></div> : tasks.length === 0 ? <Empty description="No pending follow-ups" className="py-12" /> : (
+        {loading ? <div className="flex justify-center py-16"><Spin size="large" /></div> : filteredTasks.length === 0 ? <Empty description="No tasks found for this filter" className="py-12" /> : (
           <div className="space-y-3">
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <div key={task.id} className="flex items-center justify-between gap-4 border border-gray-100 rounded-2xl p-4">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="p-2 bg-gray-100 rounded-xl text-gray-700 shrink-0"><Clock size={17} /></div>

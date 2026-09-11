@@ -199,6 +199,14 @@ def reschedule_appointment(
     appointment = database.reschedule_appointment(
         clinic_id, appointment_id, request.date, request.time, request.color
     )
+    
+    # Auto-resolve any pending reschedule tasks for this patient
+    patient_id = appointment.get("patient_id")
+    if patient_id:
+        for t in database.list_tasks(clinic_id):
+            if t.get("patient_id") == patient_id and t.get("type") == "RESCHEDULE_REQUESTED" and t.get("status") != "RESOLVED":
+                database.resolve_task(clinic_id, t.get("id"))
+                
     background_tasks.add_task(
         notifications.send_appointment_notification, clinic_id, appointment, "confirmation"
     )
