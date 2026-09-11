@@ -282,7 +282,7 @@ def chat_with_agent(request: ChatRequest, clinic_id: str = Depends(get_current_c
     Send a message to the CareForMe autonomous agent for a specific clinic.
     """
     try:
-        prompt = f"[Context: Clinic {clinic_id}] {request.message}"
+        prompt = f"System Instruction: You are operating on behalf of clinic_id '{clinic_id}'. You MUST use this exact clinic_id for ALL tool calls. Do not ask the user for it.\n\nUser Message: {request.message}"
         result = careforme_agent(prompt)
         return {"response": extract_agent_text(result.message)}
     except Exception as e:

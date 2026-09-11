@@ -29,7 +29,7 @@ for clinic in clinics:
     # Strands agent background maintenance
     print("Waking up AI Agent for background maintenance...")
     response = careforme_agent(
-        f"Hello CareForMe. Please perform routine background maintenance for clinic '{clinic_id}'. Check for past appointments, follow up with patients via SMS if needed, and update their statuses."
+        f"System Instruction: You are operating on behalf of clinic_id '{clinic_id}'. You MUST use this exact clinic_id for ALL tool calls.\n\nUser Message: Please perform routine background maintenance. Check for past appointments, follow up with patients via SMS if needed, and update their statuses."
     )
     print("Agent completed maintenance:")
     print(response)
