@@ -91,7 +91,7 @@ export default function HowToUsePage() {
             <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-gray-50 p-6 rounded-[2rem] border border-gray-100 hover:shadow-md transition-shadow">
               <h3 className="font-bold text-xl text-gray-900 mb-2">3. Patient Communication</h3>
               <p className="text-gray-600 leading-relaxed">
-                Patients receive automated, natural-sounding SMS text notifications regarding their upcoming appointments. They can easily reply with "1" to confirm or "3" to cancel. The agent processes these replies instantly, updating your database and freeing up slots if necessary.
+                Patients receive automated, natural-sounding SMS text notifications regarding their upcoming appointments. They can easily reply with "1" to confirm, "2" to reschedule, or "3" to cancel. The agent processes these replies instantly, updating your database and freeing up slots if necessary.
               </p>
             </div>
           </motion.div>

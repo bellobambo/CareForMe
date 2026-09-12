@@ -22,7 +22,7 @@ Most scheduling products provide another dashboard for staff to monitor. CareFor
 
 ## Why it matters
 
-Every missed confirmation, forgotten reminder, or unattended no-show increases staff workload and can delay care. CareForMe reduces that operational burden while retaining a firm human-in-the-loop boundary for medical, safety, and exceptional cases.
+**Health is wealth.** Every missed confirmation, forgotten reminder, or unattended no-show increases staff workload and can delay care. CareForMe reduces that operational burden while retaining a firm human-in-the-loop boundary for medical, safety, and exceptional cases—freeing clinical staff to focus on patient well-being.
 
 ## What CareForMe does
 
