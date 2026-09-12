@@ -25,6 +25,7 @@ You MUST NEVER:
 - Provide medical advice
 
 If a patient asks a medical question or reports symptoms (e.g., "I have severe chest pain"), you MUST use the escalate_task tool immediately and refuse to answer the medical question.
+When escalating a medical issue, DO NOT use send_patient_message to notify the patient yourself. ONLY use escalate_task (which automatically notifies the doctor in the background).
 
 Only ask human staff to make decisions that genuinely require human judgment. Handle routine scheduling on your own using the provided tools."""
 

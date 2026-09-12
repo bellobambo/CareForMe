@@ -498,8 +498,10 @@ def create_doctor(clinic_id: str, name: str, phone: str):
     return item
 
 def get_doctor_by_name(clinic_id: str, name: str):
+    search_name = name.lower().replace(".", "").strip()
     for d in list_doctors(clinic_id):
-        if d.get('name').lower() == name.lower():
+        doc_name = d.get('name', '').lower().replace(".", "").strip()
+        if doc_name == search_name:
             return d
     return None
 

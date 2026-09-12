@@ -145,7 +145,7 @@ export default function AppointmentsPage() {
             setDoctors([...doctors, res.data]);
             setIsAddDoctorOpen(false);
             doctorForm.resetFields();
-            createForm.setFieldsValue({ doctor_id: res.data.name });
+            createForm.setFieldsValue({ doctor_id: res.data.id });
             toast.success("Doctor added");
         } catch (e) {
             toast.error("Failed to add doctor");

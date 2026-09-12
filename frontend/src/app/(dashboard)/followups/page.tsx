@@ -37,6 +37,7 @@ export default function FollowupsPage() {
   const [tasks, setTasks] = useState<FollowUpTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("PENDING");
+  const [resolvingTasks, setResolvingTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -61,7 +62,7 @@ export default function FollowupsPage() {
             type: "FOLLOW_UP_APPOINTMENT",
             patient_id: a.patient_id,
             patient_name: patientsMap.get(a.patient_id) || a.patient_id,
-            doctor_name: doctorsMap.get(a.doctor_id) || a.doctor_id,
+            doctor_name: a.doctor_id ? (doctorsMap.get(a.doctor_id) || a.doctor_id) : undefined,
             status: a.status,
             created_at: `${a.date}T${a.time}:00`,
             is_appointment: true,
@@ -70,9 +71,9 @@ export default function FollowupsPage() {
           }));
 
         const enrichedTasks = tasksRes.data.map(t => {
-          let doctorName = "";
+          let doctorName: string | undefined = undefined;
+          let realPatientId = t.patient_id;
           if (t.type === "ESCALATION") {
-              let realPatientId = t.patient_id;
               if (t.patient_id && !patientsMap.has(t.patient_id)) {
                   const searchTerm = t.patient_id.toLowerCase().replace(/s$/, ''); // remove trailing s just in case
                   const matchedPatient = patientsRes.data.find(p => 
@@ -86,12 +87,15 @@ export default function FollowupsPage() {
               patientAppts.sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
               if (patientAppts.length > 0) {
                   const docId = patientAppts[0].doctor_id;
-                  doctorName = doctorsMap.get(docId) || docId;
+                  if (docId) {
+                      doctorName = doctorsMap.get(docId) || docId;
+                  }
               }
           }
           return {
             ...t,
-            patient_name: patientsMap.get(t.patient_id) || t.patient_id,
+            patient_id: realPatientId || t.patient_id,
+            patient_name: patientsMap.get(realPatientId || t.patient_id) || t.patient_id,
             doctor_name: doctorName
           };
         });
@@ -117,6 +121,7 @@ export default function FollowupsPage() {
   }, []);
 
   const handleResolve = async (taskId: string) => {
+    setResolvingTasks(prev => new Set(prev).add(taskId));
     try {
       const token = localStorage.getItem("careforme_token");
       await axios.put(`${API_URL}/api/tasks/${taskId}/resolve`, {}, {
@@ -126,6 +131,12 @@ export default function FollowupsPage() {
       toast.success("Task marked as resolved!");
     } catch (e) {
       toast.error("Failed to resolve task");
+    } finally {
+      setResolvingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
     }
   };
 
@@ -191,7 +202,7 @@ export default function FollowupsPage() {
                   {task.priority && <Tag color={task.priority === "HIGH" ? "red" : "default"}>{task.priority}</Tag>}
                   <Tag color={task.status === "REQUIRES_HUMAN_REVIEW" ? "orange" : (task.status === "RESOLVED" || task.status === "COMPLETED" ? "green" : "default")}>{task.status.replaceAll("_", " ")}</Tag>
                   {task.status !== "RESOLVED" && !task.is_appointment && (
-                    <Button type="primary" size="small" icon={<CheckCircle size={14} />} onClick={() => handleResolve(task.id)}>Resolve</Button>
+                    <Button type="primary" size="small" icon={<CheckCircle size={14} />} onClick={() => handleResolve(task.id)} loading={resolvingTasks.has(task.id)}>Resolve</Button>
                   )}
                 </div>
               </div>

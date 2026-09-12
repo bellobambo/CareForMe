@@ -48,6 +48,8 @@ When a patient reports symptoms or asks for medical guidance, the agent creates 
 
 ## How it works
 
+### Architecture Diagram
+
 ```mermaid
 flowchart LR
     Staff[Clinic staff] --> Web[Next.js dashboard]

@@ -96,7 +96,18 @@ export default function PatientsPage() {
         { title: "ID", dataIndex: "id", key: "id", render: (text: string) => <span className="text-gray-400 text-sm">{text}</span> },
         { title: "Name", dataIndex: "name", key: "name", render: (text: string) => <span className="font-semibold text-gray-800">{text}</span> },
         { title: "Contact", key: "contact", render: (_: unknown, patient: Patient) => patient.contact || patient.phone || patient.email || "-" },
-        { title: "Method", dataIndex: "preferred_contact_method", key: "method", render: (method?: string) => method || "-" },
+        { 
+            title: "Method", 
+            dataIndex: "preferred_contact_method", 
+            key: "method", 
+            render: (method?: string) => {
+                if (!method) return "-";
+                const lower = method.toLowerCase();
+                if (lower === "whatsapp") return "WhatsApp";
+                if (lower === "sms") return "SMS";
+                return method;
+            } 
+        },
         {
             title: "Status",
             dataIndex: "status",
