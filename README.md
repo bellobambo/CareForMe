@@ -10,7 +10,7 @@ CareForMe handles the administrative work that keeps small clinics running: appo
 
 ## The problem
 
-Small clinics and independent practitioners lose substantial time to operational work: confirming appointments, chasing no-shows, handling reschedule requests, and monitoring follow-up queues. These tasks are repetitive, time-sensitive, and easy to miss when staff are focused on patient care.
+Small clinics and independent practitioners lose substantial time to operational work: confirming appointments, chasing patients who missed appointments, handling reschedule requests, and monitoring follow-up queues. These tasks are repetitive, time-sensitive, and easy to miss when staff are focused on patient care.
 
 Most scheduling products provide another dashboard for staff to monitor. CareForMe is different: it is an agent that can inspect the clinic schedule, identify routine work, contact opted-in patients, update operational records, and surface only the cases that require human judgment.
 
