@@ -73,7 +73,7 @@ flowchart LR
 
 1. A clinic administrator registers and signs in with Amazon Cognito.
 2. Staff create patient records, doctors, and appointments in the CareForMe dashboard.
-3. The backend stores clinic-scoped records in DynamoDB and sends an appointment confirmation to opted-in patients through Twilio.
+3. The backend stores clinic-scoped records in DynamoDB and sends an appointment confirmation to opted-in patients through Twilio(The free version).
 4. A patient can reply `1` to confirm, `2` to request rescheduling, or `STOP` to opt out. The inbound webhook updates the appointment or creates an operational task.
 5. A scheduled worker runs reminder delivery and wakes the Strands agent for background maintenance.
 6. The agent checks past appointments, sends a compassionate follow-up where appropriate, and updates the appointment status. It can also find slots, book appointments, create follow-ups, or escalate cases through its tools.
