@@ -230,4 +230,4 @@ The implementation plan is:
 4. DynamoDB's existing notification claims will continue to make delivery idempotent, preventing duplicate messages if an event is retried.
 5. If an appointment is rescheduled or cancelled, the API will replace or remove its corresponding EventBridge schedules.
 
-The existing batch worker will remain as a recovery sweep for work missed during an outage. Amazon EventBridge Scheduler is a planned enhancement; it is not yet part of the deployed implementation.
+The existing batch worker will be retained as a recovery sweep for any work missed during an outage. Migrating from the cron job to Amazon EventBridge Scheduler is planned for a future phase.
