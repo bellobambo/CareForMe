@@ -10,7 +10,7 @@ CareForMe handles the administrative work that keeps small clinics running: appo
 
 ## The problem
 
-Small clinics and independent practitioners lose substantial time to operational work: confirming appointments, chasing no-shows, handling reschedule requests, and monitoring follow-up queues. These tasks are repetitive, time-sensitive, and easy to miss when staff are focused on patient care.
+Small clinics and independent practitioners lose substantial time to operational work: confirming appointments, chasing patients who missed appointments, handling reschedule requests, and monitoring follow-up queues. These tasks are repetitive, time-sensitive, and easy to miss when staff are focused on patient care.
 
 Most scheduling products provide another dashboard for staff to monitor. CareForMe is different: it is an agent that can inspect the clinic schedule, identify routine work, contact opted-in patients, update operational records, and surface only the cases that require human judgment.
 
@@ -73,7 +73,7 @@ flowchart LR
 
 1. A clinic administrator registers and signs in with Amazon Cognito.
 2. Staff create patient records, doctors, and appointments in the CareForMe dashboard.
-3. The backend stores clinic-scoped records in DynamoDB and sends an appointment confirmation to opted-in patients through Twilio.
+3. The backend stores clinic-scoped records in DynamoDB and sends an appointment confirmation to opted-in patients through Twilio(The free version).
 4. A patient can reply `1` to confirm, `2` to request rescheduling, or `STOP` to opt out. The inbound webhook updates the appointment or creates an operational task.
 5. A scheduled worker runs reminder delivery and wakes the Strands agent for background maintenance.
 6. The agent checks past appointments, sends a compassionate follow-up where appropriate, and updates the appointment status. It can also find slots, book appointments, create follow-ups, or escalate cases through its tools.
@@ -230,4 +230,4 @@ The implementation plan is:
 4. DynamoDB's existing notification claims will continue to make delivery idempotent, preventing duplicate messages if an event is retried.
 5. If an appointment is rescheduled or cancelled, the API will replace or remove its corresponding EventBridge schedules.
 
-The existing batch worker will remain as a recovery sweep for work missed during an outage. Amazon EventBridge Scheduler is a planned enhancement; it is not yet part of the deployed implementation.
+The existing batch worker will be retained as a recovery sweep for any work missed during an outage. Migrating from the cron job to Amazon EventBridge Scheduler is planned for a future phase.
